@@ -385,17 +385,6 @@ curl -X POST "http://localhost:8000/api/v1/query" \
 
 ---
 
-## Future Roadmap
-
-* **Phase 4 → Neo4j Knowledge Graph**: Entity extraction, relationship linking (`COMPETES_WITH`, `ACQUIRED`, `SUPPLIES`, `REPORTED_REVENUE`), and graph schema creation.
-* **Phase 5 → GraphRAG + Hybrid Retrieval**: Fusing dense vector similarity with multi-hop Cypher graph traversal.
-* **Phase 6 → LangGraph Agentic RAG**: Multi-step query planning, self-correction, and tool usage.
-* **Phase 7 → Redis Caching & RBAC**: Fine-grained enterprise access control and multi-tenant semantic caching.
-* **Phase 8 → Advanced Visualization**: Interactive 3D force-directed knowledge graph visualization in Next.js.
-* **Phase 9 → Evaluation & Observability**: RAG evaluation (Ragas), OpenTelemetry, Prometheus metrics, and Grafana.
-* **Phase 10 → Distributed Scaling**: Apache Kafka streaming ingestion pipeline and Kubernetes deployment manifests.
-
----
 
 ## License
 
