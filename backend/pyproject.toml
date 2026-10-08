@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "graphintel-backend"
+version = "0.1.0"
+description = "GraphIntel Market Intelligence Backend"
+readme = "README.md"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+ignore = ["E501"]
+
+[tool.black]
+line-length = 100
+target-version = ['py312']

@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: graphintel-config
+  namespace: graphintel
+data:
+  ENVIRONMENT: "production"
+  PROJECT_NAME: "GraphIntel Market Intelligence"
+  API_V1_PREFIX: "/api/v1"
+  BACKEND_CORS_ORIGINS: '["https://graphintel.example.com", "http://localhost:3000"]'
+  STORAGE_PROVIDER: "minio"
+  VECTOR_STORE_PROVIDER: "qdrant"
+  GRAPH_STORE_PROVIDER: "neo4j"
+  EMBEDDING_PROVIDER: "local"
+  LLM_PROVIDER: "mock"
+  CHUNK_SIZE: "1000"
+  CHUNK_OVERLAP: "200"
+  TOP_K: "5"
+  MAX_UPLOAD_SIZE_MB: "50"
+  REDIS_HOST: "graphintel-redis"
+  REDIS_PORT: "6379"
+  POSTGRES_SERVER: "graphintel-postgres"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "graphintel"
+  QDRANT_HOST: "graphintel-qdrant"
+  QDRANT_PORT: "6333"
+  NEO4J_URI: "bolt://graphintel-neo4j:7687"
+  NEXT_PUBLIC_API_URL: "https://api.graphintel.example.com/api/v1"

@@ -1,0 +1,42 @@
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Python environments, bytecode, and test/lint caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Frontend dependencies and build output
+node_modules/
+.next/
+out/
+dist/
+coverage/
+
+# Local databases, uploads, and generated reports
+*.db
+backend/storage_data/
+backend/evaluation_results.json
+backend/load_test_results.json
+
+# Deployment secrets and local Terraform state
+k8s/secret.yaml
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars
+
+# Private keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx

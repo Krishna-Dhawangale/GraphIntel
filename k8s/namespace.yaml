@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: graphintel
+  labels:
+    app.kubernetes.io/name: graphintel
+    app.kubernetes.io/part-of: graphintel-platform
