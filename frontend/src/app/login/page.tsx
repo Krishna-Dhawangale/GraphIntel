@@ -7,6 +7,7 @@ import { Activity, ArrowRight, Eye, EyeOff, Lock, Mail, ShieldCheck } from "luci
 import { api } from "../../lib/api";
 import { setTokens } from "../../lib/auth";
 import { toast } from "../../lib/toast";
+import GoogleSignInButton from "../../components/GoogleSignInButton";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -130,6 +131,21 @@ export default function LoginPage() {
               )}
             </button>
           </form>
+
+          {/* Divider */}
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border"></div>
+            </div>
+            <div className="relative flex justify-center text-[11px] uppercase">
+              <span className="bg-slate-900/90 px-3 text-slate-500 font-semibold tracking-wider">
+                Or continue with
+              </span>
+            </div>
+          </div>
+
+          {/* Google Sign In */}
+          <GoogleSignInButton mode="signin" />
 
           <div className="text-center text-xs text-slate-400 pt-1">
             Don&apos;t have an account?{" "}
