@@ -16,6 +16,7 @@ htmlcov/
 # Frontend dependencies and build output
 node_modules/
 .next/
+.next-dev/
 out/
 dist/
 coverage/
