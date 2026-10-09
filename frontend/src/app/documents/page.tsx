@@ -21,6 +21,7 @@ import Sidebar from "../../components/Sidebar";
 import { api } from "../../lib/api";
 import { formatBytes, formatDate } from "../../lib/utils";
 import { Document } from "../../types";
+import { toast } from "../../lib/toast";
 
 export default function DocumentsPage() {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -48,28 +49,93 @@ export default function DocumentsPage() {
     fetchDocs();
   }, []);
 
+  // Real-time polling for any documents currently in PROCESSING or UPLOADED state
+  useEffect(() => {
+    const hasPending = documents.some(
+      (d) => d.status === "PROCESSING" || d.status === "UPLOADED"
+    );
+    if (!hasPending) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const pendingDocs = documents.filter(
+          (d) => d.status === "PROCESSING" || d.status === "UPLOADED"
+        );
+        let anyChanged = false;
+
+        const updated = await Promise.all(
+          pendingDocs.map(async (doc) => {
+            try {
+              const statusData = await api.documents.status(doc.id);
+              if (statusData.status !== doc.status) {
+                anyChanged = true;
+              }
+              return {
+                ...doc,
+                status: statusData.status,
+                chunks_count: statusData.total_chunks,
+                error_message: statusData.error_message ?? null,
+              };
+            } catch {
+              return doc;
+            }
+          })
+        );
+
+        if (anyChanged) {
+          setDocuments((prev) =>
+            prev.map((d) => {
+              const match = updated.find((u) => u.id === d.id);
+              return match || d;
+            })
+          );
+        }
+      } catch (err) {
+        console.error("Status poll error:", err);
+      }
+    }, 2500);
+
+    return () => clearInterval(interval);
+  }, [documents]);
+
   const handleFileUpload = async (files: FileList | null) => {
-    const file = files?.[0];
-    if (!file) return;
+    if (!files || files.length === 0) return;
 
     setUploading(true);
-    setUploadProgress(25);
+    setUploadProgress(15);
     setUploadError(null);
     setUploadSuccess(null);
 
-    const progressTimer = setInterval(() => {
-      setUploadProgress((p) => (p < 85 ? p + 15 : p));
-    }, 200);
+    const progressInterval = setInterval(() => {
+      setUploadProgress((prev) => (prev < 90 ? prev + 25 : prev));
+    }, 150);
 
     try {
-      await api.documents.upload(file, undefined, true);
+      const uploadList = Array.from(files);
+      let successCount = 0;
+
+      for (const file of uploadList) {
+        // Fast non-blocking upload: server accepts file and runs ingestion asynchronously
+        await api.documents.upload(file, undefined, false);
+        successCount++;
+      }
+
       setUploadProgress(100);
-      setUploadSuccess(`Successfully ingested "${file.name}" with vector and knowledge graph indexing.`);
+      const msg =
+        successCount === 1
+          ? `"${uploadList[0].name}" uploaded — ingesting in background...`
+          : `${successCount} documents queued for ingestion.`;
+      setUploadSuccess(msg);
+      toast.success(msg, { duration: 4000 });
+
+      // Instantly refresh list to show newly uploaded document(s) in PROCESSING state
       await fetchDocs();
     } catch (err: any) {
-      setUploadError(err.message || "Failed to upload document. Please ensure valid format (PDF, DOCX, TXT, CSV, JSON).");
+      const errMsg = err.message || "Failed to upload document. Please ensure valid format (PDF, DOCX, TXT, CSV, JSON).";
+      setUploadError(errMsg);
+      toast.error(errMsg, { duration: 6000 });
     } finally {
-      clearInterval(progressTimer);
+      clearInterval(progressInterval);
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
@@ -95,14 +161,16 @@ export default function DocumentsPage() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to soft-delete "${name}" and prune its vectors?`)) {
+    if (!confirm(`Are you sure you want to delete "${name}" and prune its vectors?`)) {
       return;
     }
     try {
       await api.documents.delete(id);
+      toast.success(`"${name}" deleted and vectors pruned.`, { duration: 3000 });
       await fetchDocs();
     } catch (err: any) {
-      alert(`Delete failed: ${err.message}`);
+      const errMsg = `Delete failed: ${err.message}`;
+      toast.error(errMsg, { duration: 5000 });
     }
   };
 
@@ -112,20 +180,21 @@ export default function DocumentsPage() {
   );
 
   return (
-    <div className="flex">
+    <div className="flex min-h-[calc(100vh-4rem)]">
       <Sidebar />
-      <main className="flex-1 p-8 max-w-7xl mx-auto space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-8 pb-20 lg:pb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white">Document Repository</h1>
-            <p className="text-sm text-slate-400 mt-1">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Document Repository</h1>
+            <p className="text-xs sm:text-sm text-slate-400 mt-1">
               Upload filings, reports, and industry analyses with automated vector embedding and graph synchronization.
             </p>
           </div>
           <button
             onClick={fetchDocs}
-            className="self-start sm:self-auto p-2.5 rounded-lg border border-border bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-white transition"
+            className="self-start sm:self-auto p-2 sm:p-2.5 rounded-xl border border-border bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-white transition"
             title="Refresh List"
+            aria-label="Refresh List"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </button>
@@ -138,7 +207,7 @@ export default function DocumentsPage() {
           onDragOver={handleDrag}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          className={`glass-panel p-8 rounded-2xl border-2 border-dashed transition-all text-center space-y-3 cursor-pointer ${
+          className={`glass-panel p-6 sm:p-8 rounded-2xl border-2 border-dashed transition-all text-center space-y-3 cursor-pointer ${
             dragActive
               ? "border-emerald-500 bg-emerald-500/5 scale-[1.005]"
               : "border-border/80 hover:border-emerald-500/50"
@@ -149,19 +218,20 @@ export default function DocumentsPage() {
             ref={fileInputRef}
             onChange={(e) => handleFileUpload(e.target.files)}
             className="hidden"
+            multiple
             accept=".pdf,.docx,.txt,.md,.csv,.json"
           />
 
-          <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center">
-            <UploadCloud className="w-7 h-7" />
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center">
+            <UploadCloud className="w-6 h-6 sm:w-7 sm:h-7" />
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-white">
-              {uploading ? "Ingesting and indexing document..." : "Drag & drop your files here, or click to browse"}
+            <p className="text-xs sm:text-sm font-semibold text-white">
+              {uploading ? "Uploading document(s)..." : "Drag & drop files here, or click to browse"}
             </p>
-            <p className="text-xs text-slate-400 mt-1">
-              Supported formats: PDF, DOCX, TXT, Markdown, CSV, JSON (up to 50MB)
+            <p className="text-[11px] sm:text-xs text-slate-400 mt-1">
+              Supports single or batch upload: PDF, DOCX, TXT, Markdown, CSV, JSON (up to 50MB)
             </p>
           </div>
 
@@ -173,20 +243,20 @@ export default function DocumentsPage() {
                   style={{ width: `${uploadProgress}%` }}
                 />
               </div>
-              <p className="text-[11px] text-slate-400">{uploadProgress}% - Parsing & Graph Synchronization</p>
+              <p className="text-[11px] text-slate-400">{uploadProgress}% - Uploading & Queuing Pipeline</p>
             </div>
           )}
         </div>
 
         {uploadSuccess && (
-          <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center space-x-2">
+          <div className="p-3.5 sm:p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center space-x-2">
             <CheckCircle2 className="w-4 h-4 shrink-0" />
             <span>{uploadSuccess}</span>
           </div>
         )}
 
         {uploadError && (
-          <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center space-x-2">
+          <div className="p-3.5 sm:p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center space-x-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{uploadError}</span>
           </div>
@@ -194,12 +264,12 @@ export default function DocumentsPage() {
 
         {/* Filter and List */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center space-x-2">
               <FileText className="w-4 h-4 text-emerald-400" />
-              <h2 className="text-base font-bold text-white">Ingested Corpus ({filtered.length})</h2>
+              <h2 className="text-sm sm:text-base font-bold text-white">Ingested Corpus ({filtered.length})</h2>
             </div>
-            <div className="relative w-64">
+            <div className="relative w-full sm:w-64">
               <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5 pointer-events-none" />
               <input
                 type="text"
@@ -223,20 +293,20 @@ export default function DocumentsPage() {
                 {filtered.map((doc) => (
                   <div
                     key={doc.id}
-                    className="p-4 flex items-center justify-between hover:bg-slate-900/50 transition gap-4"
+                    className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between hover:bg-slate-900/50 transition gap-3 sm:gap-4"
                   >
-                    <div className="flex items-center space-x-3.5 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700/60 flex items-center justify-center text-slate-300 shrink-0">
-                        <FileText className="w-5 h-5 text-cyan-400" />
+                    <div className="flex items-center space-x-3 min-w-0">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-800 border border-slate-700/60 flex items-center justify-center text-slate-300 shrink-0">
+                        <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400" />
                       </div>
                       <div className="min-w-0">
                         <Link
                           href={`/documents/${doc.id}`}
-                          className="text-sm font-semibold text-white hover:text-emerald-400 transition truncate block"
+                          className="text-xs sm:text-sm font-semibold text-white hover:text-emerald-400 transition truncate block"
                         >
                           {doc.title || doc.filename}
                         </Link>
-                        <div className="flex items-center space-x-3 text-xs text-slate-400 mt-0.5">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] sm:text-xs text-slate-400 mt-0.5">
                           <span>{formatBytes(doc.file_size)}</span>
                           <span>•</span>
                           <span>{formatDate(doc.created_at)}</span>
@@ -250,34 +320,41 @@ export default function DocumentsPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-4 shrink-0">
+                    <div className="flex items-center justify-between sm:justify-end space-x-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/30">
                       <span
-                        className={`text-[10px] px-2.5 py-1 rounded-full font-mono uppercase font-semibold ${
+                        className={`text-[9px] sm:text-[10px] px-2.5 py-0.5 rounded-full font-mono uppercase font-semibold inline-flex items-center space-x-1.5 ${
                           doc.status === "COMPLETED"
                             ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                            : doc.status === "PROCESSING"
+                            : doc.status === "PROCESSING" || doc.status === "UPLOADED"
                             ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse"
                             : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
                         }`}
                       >
-                        {doc.status}
+                        {(doc.status === "PROCESSING" || doc.status === "UPLOADED") && (
+                          <RefreshCw className="w-2.5 h-2.5 animate-spin mr-1 inline" />
+                        )}
+                        <span>{doc.status === "UPLOADED" ? "QUEUED" : doc.status}</span>
                       </span>
 
-                      <Link
-                        href={`/documents/${doc.id}`}
-                        className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
-                        title="View Document Details & Chunks"
-                      >
-                        <ArrowRight className="w-4 h-4" />
-                      </Link>
+                      <div className="flex items-center space-x-1 sm:space-x-2">
+                        <Link
+                          href={`/documents/${doc.id}`}
+                          className="p-1.5 sm:p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
+                          title="View Document Details & Chunks"
+                          aria-label="View Document Details & Chunks"
+                        >
+                          <ArrowRight className="w-4 h-4" />
+                        </Link>
 
-                      <button
-                        onClick={() => handleDelete(doc.id, doc.title || doc.filename)}
-                        className="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition"
-                        title="Delete Document"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                        <button
+                          onClick={() => handleDelete(doc.id, doc.title || doc.filename)}
+                          className="p-1.5 sm:p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition"
+                          title="Delete Document"
+                          aria-label="Delete Document"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -289,3 +366,4 @@ export default function DocumentsPage() {
     </div>
   );
 }
+

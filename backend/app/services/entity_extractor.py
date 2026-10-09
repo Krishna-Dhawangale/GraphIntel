@@ -39,68 +39,82 @@ class BaseEntityExtractor(ABC):
         pass
 
 
+TRIGGER_KEYWORDS = (
+    "acquire", "acquir", "found", "ceo", "chief executive", "worked", "former", "invest", "launch", "develop", "creat"
+)
+
+ACQUISITION_PATTERNS = [
+    re.compile(
+        r"\b([A-Z][A-Za-z0-9&.]+(?:\s+[A-Z][A-Za-z0-9&.]+){0,4})\s+(?:has\s+)?acquired\s+([A-Z][A-Za-z0-9&.]+(?:\s+[A-Z][A-Za-z0-9&.]+){0,4})(?:\s+(?:in|for|during)\s+(\d{4}))?[.,\n]",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b([A-Z][A-Za-z0-9&.]+(?:\s+[A-Z][A-Za-z0-9&.]+){0,4})\s+(?:was\s+)?acquired\s+by\s+([A-Z][A-Za-z0-9&.]+(?:\s+[A-Z][A-Za-z0-9&.]+){0,4})(?:\s+(?:in|for|during)\s+(\d{4}))?[.,\n]",
+        re.IGNORECASE,
+    ),
+]
+
+FOUNDING_PATTERNS = [
+    re.compile(
+        r"\b([A-Z][A-Za-z0-9&.]+(?:\s+[A-Z][A-Za-z0-9&.]+){0,4})\s+(?:co-)?founded\s+([A-Z][A-Za-z0-9&.]+(?:\s+[A-Z][A-Za-z0-9&.]+){0,4})(?:\s+(?:in|back\s+in)\s+(\d{4}))?[.,\n]",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b([A-Z][A-Za-z0-9&.]+(?:\s+[A-Z][A-Za-z0-9&.]+){0,4})\s+(?:was\s+)?founded\s+by\s+([A-Z][A-Za-z0-9&.]+(?:\s+[A-Z][A-Za-z0-9&.]+){0,4})(?:\s+(?:in|back\s+in)\s+(\d{4}))?[.,\n]",
+        re.IGNORECASE,
+    ),
+]
+
+CEO_PATTERNS = [
+    re.compile(
+        r"\b([A-Z][A-Za-z.]+(?:\s+[A-Z][A-Za-z.]+){0,3})\s+(?:served\s+as|is|was|became)\s+(?:the\s+)?CEO\s+of\s+([A-Z][A-Za-z0-9&.]+(?:\s+[A-Z][A-Za-z0-9&.]+){0,4})(?:\s+(?:from\s+(\d{4})\s+to\s+(\d{4})|in\s+(\d{4})|since\s+(\d{4})))?[.,\n]",
+        re.IGNORECASE,
+    ),
+]
+
+WORKED_AT_PATTERNS = [
+    re.compile(
+        r"\b([A-Z][A-Za-z.]+(?:\s+[A-Z][A-Za-z.]+){0,3})\s+(?:previously\s+)?worked\s+at\s+([A-Z][A-Za-z0-9&.]+(?:\s+[A-Z][A-Za-z0-9&.]+){0,4})(?:\s+(?:from\s+(\d{4})\s+to\s+(\d{4})|until\s+(\d{4})|in\s+(\d{4})))?[.,\n]",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"former\s+([A-Z][A-Za-z0-9&.]+(?:\s+[A-Z][A-Za-z0-9&.]+){0,4})\s+(?:employee|engineer|executive|veteran)\s+([A-Z][A-Za-z.]+(?:\s+[A-Z][A-Za-z.]+){0,3})[,\s]",
+        re.IGNORECASE,
+    ),
+]
+
+INVESTMENT_PATTERNS = [
+    re.compile(
+        r"\b([A-Z][A-Za-z0-9&.]+(?:\s+[A-Z][A-Za-z0-9&.]+){0,4})\s+invested\s+in\s+([A-Z][A-Za-z0-9&.]+(?:\s+[A-Z][A-Za-z0-9&.]+){0,4})(?:\s+(?:in\s+(\d{4})))?[.,\n]",
+        re.IGNORECASE,
+    ),
+]
+
+PRODUCT_PATTERNS = [
+    re.compile(
+        r"\b([A-Z][A-Za-z0-9&.]+(?:\s+[A-Z][A-Za-z0-9&.]+){0,4})\s+(?:developed|launched|released|created)\s+([A-Z][A-Za-z0-9&.]+(?:\s+[A-Z][A-Za-z0-9&.]+){0,4})(?:\s+(?:in\s+(\d{4})))?[.,\n]",
+        re.IGNORECASE,
+    ),
+]
+
+ARTICLE_PREFIX_RE = re.compile(r"^(the|a|an)\s+", re.IGNORECASE)
+TRAILING_PUNCT_RE = re.compile(r"[,\.;:]$")
+
+
 class RuleBasedEntityExtractor(BaseEntityExtractor):
     """High-precision deterministic rule and regex extractor for financial/market intelligence text."""
 
     def __init__(self):
-        # Patterns for relationships
-        self.acquisition_patterns = [
-            re.compile(
-                r"([A-Z][A-Za-z0-9\s&.]+?)\s+(?:has\s+)?acquired\s+([A-Z][A-Za-z0-9\s&.]+?)(?:\s+(?:in|for|during)\s+(\d{4}))?[.,\n]",
-                re.IGNORECASE,
-            ),
-            re.compile(
-                r"([A-Z][A-Za-z0-9\s&.]+?)\s+(?:was\s+)?acquired\s+by\s+([A-Z][A-Za-z0-9\s&.]+?)(?:\s+(?:in|for|during)\s+(\d{4}))?[.,\n]",
-                re.IGNORECASE,
-            ),
-        ]
-
-        self.founding_patterns = [
-            re.compile(
-                r"([A-Z][A-Za-z0-9\s&.]+?)\s+(?:co-)?founded\s+([A-Z][A-Za-z0-9\s&.]+?)(?:\s+(?:in|back\s+in)\s+(\d{4}))?[.,\n]",
-                re.IGNORECASE,
-            ),
-            re.compile(
-                r"([A-Z][A-Za-z0-9\s&.]+?)\s+(?:was\s+)?founded\s+by\s+([A-Z][A-Za-z0-9\s&.]+?)(?:\s+(?:in|back\s+in)\s+(\d{4}))?[.,\n]",
-                re.IGNORECASE,
-            ),
-        ]
-
-        self.ceo_patterns = [
-            re.compile(
-                r"([A-Z][A-Za-z\s.]+?)\s+(?:served\s+as|is|was|became)\s+(?:the\s+)?CEO\s+of\s+([A-Z][A-Za-z0-9\s&.]+?)(?:\s+(?:from\s+(\d{4})\s+to\s+(\d{4})|in\s+(\d{4})|since\s+(\d{4})))?[.,\n]",
-                re.IGNORECASE,
-            ),
-        ]
-
-        self.worked_at_patterns = [
-            re.compile(
-                r"([A-Z][A-Za-z\s.]+?)\s+(?:previously\s+)?worked\s+at\s+([A-Z][A-Za-z0-9\s&.]+?)(?:\s+(?:from\s+(\d{4})\s+to\s+(\d{4})|until\s+(\d{4})|in\s+(\d{4})))?[.,\n]",
-                re.IGNORECASE,
-            ),
-            re.compile(
-                r"former\s+([A-Z][A-Za-z0-9\s&.]+?)\s+(?:employee|engineer|executive|veteran)\s+([A-Z][A-Za-z\s.]+?)[,\s]",
-                re.IGNORECASE,
-            ),
-        ]
-
-        self.investment_patterns = [
-            re.compile(
-                r"([A-Z][A-Za-z0-9\s&.]+?)\s+invested\s+in\s+([A-Z][A-Za-z0-9\s&.]+?)(?:\s+(?:in\s+(\d{4})))?[.,\n]",
-                re.IGNORECASE,
-            ),
-        ]
-
-        self.product_patterns = [
-            re.compile(
-                r"([A-Z][A-Za-z0-9\s&.]+?)\s+(?:developed|launched|released|created)\s+([A-Z][A-Za-z0-9\s&.]+?)(?:\s+(?:in\s+(\d{4})))?[.,\n]",
-                re.IGNORECASE,
-            ),
-        ]
+        self.acquisition_patterns = ACQUISITION_PATTERNS
+        self.founding_patterns = FOUNDING_PATTERNS
+        self.ceo_patterns = CEO_PATTERNS
+        self.worked_at_patterns = WORKED_AT_PATTERNS
+        self.investment_patterns = INVESTMENT_PATTERNS
+        self.product_patterns = PRODUCT_PATTERNS
 
     def _clean_entity_name(self, name: str) -> str:
-        cleaned = re.sub(r"^(the|a|an)\s+", "", name.strip(), flags=re.IGNORECASE)
-        cleaned = re.sub(r"[,\.;:]$", "", cleaned).strip()
+        cleaned = ARTICLE_PREFIX_RE.sub("", name.strip())
+        cleaned = TRAILING_PUNCT_RE.sub("", cleaned).strip()
         return cleaned
 
     async def extract(
@@ -110,6 +124,13 @@ class RuleBasedEntityExtractor(BaseEntityExtractor):
         chunk_id: str,
         page_number: Optional[int] = None,
     ) -> Tuple[List[EntityCreate], List[RelationshipCreate]]:
+        if not text or len(text) < 10:
+            return [], []
+
+        text_lower = text.lower()
+        if not any(k in text_lower for k in TRIGGER_KEYWORDS):
+            return [], []
+
         entities_dict: Dict[str, EntityCreate] = {}
         relationships: List[RelationshipCreate] = []
 
@@ -281,11 +302,12 @@ class RuleBasedEntityExtractor(BaseEntityExtractor):
 
 
 class LLMEntityExtractor(BaseEntityExtractor):
-    """LLM-based entity and relationship extractor with JSON extraction."""
+    """LLM-based entity and relationship extractor with fast circuit breaker and fallback."""
 
     def __init__(self, llm: Optional[LLMProvider] = None):
         self.llm = llm or get_llm_provider()
         self.fallback = RuleBasedEntityExtractor()
+        self._circuit_broken = False
 
     async def extract(
         self,
@@ -294,8 +316,16 @@ class LLMEntityExtractor(BaseEntityExtractor):
         chunk_id: str,
         page_number: Optional[int] = None,
     ) -> Tuple[List[EntityCreate], List[RelationshipCreate]]:
-        if settings.LLM_PROVIDER == "mock":
+        if not text or len(text) < 10:
+            return [], []
+
+        if self._circuit_broken or getattr(settings, "LLM_PROVIDER", "mock") == "mock":
             return await self.fallback.extract(text, document_id, chunk_id, page_number)
+
+        # Pre-filter: if no relationship keywords exist, fallback immediately
+        text_lower = text.lower()
+        if not any(k in text_lower for k in TRIGGER_KEYWORDS):
+            return [], []
 
         prompt = f"""You are a Knowledge Graph Information Extraction specialist.
 Analyze the following text and extract entities and relationships.
@@ -382,6 +412,7 @@ JSON output:
                 return extracted_entities, extracted_rels
 
         except Exception as e:
-            logger.warning(f"LLM entity extraction failed ({e}), using rule-based fallback.")
+            self._circuit_broken = True
+            logger.warning(f"LLM entity extraction tripped circuit breaker ({e}), using fast rule-based fallback.")
 
         return await self.fallback.extract(text, document_id, chunk_id, page_number)

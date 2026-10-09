@@ -23,6 +23,7 @@ import {
 import Sidebar from "../../components/Sidebar";
 import { api } from "../../lib/api";
 import { ResearchReport } from "../../types";
+import { toast } from "../../lib/toast";
 
 function ReportContent() {
   const searchParams = useSearchParams();
@@ -74,8 +75,10 @@ function ReportContent() {
       };
 
       setReport(generated);
-    } catch (e) {
+      toast.success("Intelligence dossier compiled successfully.", { duration: 3000 });
+    } catch (e: any) {
       console.error("Report generation error:", e);
+      toast.error(e.message || "Failed to generate report. Ensure documents are ingested.", { duration: 5000 });
     } finally {
       setLoading(false);
     }
@@ -129,24 +132,24 @@ ${report.citations.map((c) => `- [${c.citation_order}] **${c.filename}** (Page: 
   };
 
   return (
-    <div className="flex">
+    <div className="flex min-h-[calc(100vh-4rem)]">
       <Sidebar />
-      <main className="flex-1 p-8 max-w-7xl mx-auto space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-8 pb-20 lg:pb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div>
             <div className="flex items-center space-x-2 mb-1">
               <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
                 Executive Synthesis
               </span>
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white">Research Report Workspace</h1>
-            <p className="text-sm text-slate-400 mt-1">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Research Report Workspace</h1>
+            <p className="text-xs sm:text-sm text-slate-400 mt-1">
               Assemble, preview, and export comprehensive market intelligence dossiers in Markdown, PDF, and JSON.
             </p>
           </div>
 
           {report && (
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
               <button
                 onClick={handleCopyMarkdown}
                 className="flex items-center space-x-1.5 px-3 py-2 bg-slate-900 border border-border hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg text-xs font-semibold transition"
@@ -159,7 +162,7 @@ ${report.citations.map((c) => `- [${c.citation_order}] **${c.filename}** (Page: 
                 className="flex items-center space-x-1.5 px-3 py-2 bg-slate-900 border border-border hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg text-xs font-semibold transition"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>Export JSON</span>
+                <span>JSON</span>
               </button>
               <button
                 onClick={() => window.print()}
@@ -173,22 +176,22 @@ ${report.citations.map((c) => `- [${c.citation_order}] **${c.filename}** (Page: 
         </div>
 
         {/* Input Bar */}
-        <div className="glass-panel p-5 rounded-2xl border border-border space-y-3">
+        <div className="glass-panel p-4 sm:p-5 rounded-2xl border border-border space-y-3">
           <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
             Report Subject / Investigation Target
           </label>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
             <input
               type="text"
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               placeholder="e.g. Competitive positioning of semiconductor acquisitions in 2024"
-              className="flex-1 px-4 py-2.5 bg-slate-900 border border-border rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+              className="flex-1 px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-900 border border-border rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
             />
             <button
               onClick={generateReport}
               disabled={loading || !question.trim()}
-              className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold rounded-xl text-xs sm:text-sm transition disabled:opacity-50 shrink-0"
+              className="px-4 sm:px-5 py-2 sm:py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold rounded-xl text-xs sm:text-sm transition disabled:opacity-50 shrink-0"
             >
               {loading ? "Synthesizing Dossier..." : "Generate Dossier"}
             </button>
@@ -197,10 +200,10 @@ ${report.citations.map((c) => `- [${c.citation_order}] **${c.filename}** (Page: 
 
         {/* Format Selector */}
         {report && (
-          <div className="flex items-center space-x-2 border-b border-border/60 pb-3 text-xs">
+          <div className="flex items-center space-x-2 border-b border-border/60 pb-3 text-xs overflow-x-auto">
             <button
               onClick={() => setActiveFormat("preview")}
-              className={`px-3 py-1.5 rounded-lg font-medium transition ${
+              className={`px-3 py-1.5 rounded-lg font-medium transition shrink-0 ${
                 activeFormat === "preview"
                   ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                   : "text-slate-400 hover:text-white"
@@ -210,7 +213,7 @@ ${report.citations.map((c) => `- [${c.citation_order}] **${c.filename}** (Page: 
             </button>
             <button
               onClick={() => setActiveFormat("markdown")}
-              className={`px-3 py-1.5 rounded-lg font-medium transition ${
+              className={`px-3 py-1.5 rounded-lg font-medium transition shrink-0 ${
                 activeFormat === "markdown"
                   ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                   : "text-slate-400 hover:text-white"
@@ -220,7 +223,7 @@ ${report.citations.map((c) => `- [${c.citation_order}] **${c.filename}** (Page: 
             </button>
             <button
               onClick={() => setActiveFormat("json")}
-              className={`px-3 py-1.5 rounded-lg font-medium transition ${
+              className={`px-3 py-1.5 rounded-lg font-medium transition shrink-0 ${
                 activeFormat === "json"
                   ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                   : "text-slate-400 hover:text-white"
@@ -233,22 +236,22 @@ ${report.citations.map((c) => `- [${c.citation_order}] **${c.filename}** (Page: 
 
         {/* Report Content View */}
         {loading ? (
-          <div className="glass-panel p-12 rounded-2xl border border-border text-center text-slate-400 text-xs space-y-3">
+          <div className="glass-panel p-8 sm:p-12 rounded-2xl border border-border text-center text-slate-400 text-xs space-y-3">
             <Sparkles className="w-8 h-8 text-emerald-400 animate-spin mx-auto" />
             <p>Traversing knowledge graph paths and compiling verifiable citations...</p>
           </div>
         ) : report ? (
           activeFormat === "preview" ? (
-            <div className="glass-panel p-8 sm:p-12 rounded-2xl border border-border space-y-8 print:border-none print:p-0">
+            <div className="glass-panel p-5 sm:p-8 lg:p-12 rounded-2xl border border-border space-y-6 sm:space-y-8 print:border-none print:p-0">
               {/* Report Header */}
-              <div className="space-y-3 border-b border-border/60 pb-6">
-                <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
+              <div className="space-y-2 sm:space-y-3 border-b border-border/60 pb-4 sm:pb-6">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400 font-mono">
                   <span>REPORT ID: {report.id}</span>
                   <span className="text-emerald-400 font-semibold">
                     CONFIDENCE: {Math.round(report.confidence * 100)}%
                   </span>
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">{report.title}</h2>
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white tracking-tight break-words">{report.title}</h2>
                 <p className="text-xs text-slate-400">
                   Published: {new Date(report.created_at).toLocaleDateString()} • Verified by GraphIntel Engine
                 </p>
@@ -257,7 +260,7 @@ ${report.citations.map((c) => `- [${c.citation_order}] **${c.filename}** (Page: 
               {/* Executive Summary */}
               <div className="space-y-2">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400">Executive Summary</h3>
-                <p className="text-sm text-slate-300 leading-relaxed bg-slate-950/40 p-4 rounded-xl border border-border/40">
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed bg-slate-950/40 p-3.5 sm:p-4 rounded-xl border border-border/40">
                   {report.executive_summary}
                 </p>
               </div>
@@ -267,7 +270,7 @@ ${report.citations.map((c) => `- [${c.citation_order}] **${c.filename}** (Page: 
                 <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400">Key Intelligence Findings</h3>
                 <div className="space-y-2">
                   {report.findings.map((f, i) => (
-                    <div key={i} className="flex items-start space-x-3 p-3 rounded-lg bg-slate-900/40 border border-border/40 text-xs">
+                    <div key={i} className="flex items-start space-x-2.5 sm:space-x-3 p-3 rounded-lg bg-slate-900/40 border border-border/40 text-xs">
                       <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                       <span className="text-slate-200 leading-relaxed">{f}</span>
                     </div>
@@ -276,7 +279,7 @@ ${report.citations.map((c) => `- [${c.citation_order}] **${c.filename}** (Page: 
               </div>
 
               {/* Entities & Relationships */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-3">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-cyan-400">Identified Entities</h3>
                   <div className="flex flex-wrap gap-1.5">
@@ -299,9 +302,9 @@ ${report.citations.map((c) => `- [${c.citation_order}] **${c.filename}** (Page: 
                         key={idx}
                         className="p-2 rounded-lg bg-slate-900/60 border border-border/40 text-xs font-mono flex items-center justify-between"
                       >
-                        <span className="text-white">{r.source}</span>
-                        <span className="text-emerald-400 text-[11px]">──[{r.rel}]──▶</span>
-                        <span className="text-white">{r.target}</span>
+                        <span className="text-white truncate max-w-[40%]">{r.source}</span>
+                        <span className="text-emerald-400 text-[10px] sm:text-[11px] shrink-0">──[{r.rel}]──▶</span>
+                        <span className="text-white truncate max-w-[40%] text-right">{r.target}</span>
                       </div>
                     ))}
                   </div>
@@ -309,12 +312,12 @@ ${report.citations.map((c) => `- [${c.citation_order}] **${c.filename}** (Page: 
               </div>
 
               {/* Verifiable Sources */}
-              <div className="space-y-3 border-t border-border/60 pt-6">
+              <div className="space-y-3 border-t border-border/60 pt-4 sm:pt-6">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400">Verifiable Source Citations</h3>
                 {report.citations.length === 0 ? (
                   <p className="text-xs text-slate-500">No external file citations mapped.</p>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                     {report.citations.map((c, idx) => (
                       <div
                         key={idx}
@@ -333,7 +336,7 @@ ${report.citations.map((c) => `- [${c.citation_order}] **${c.filename}** (Page: 
               </div>
 
               {/* Methodology & Limitations */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-border/60 pt-6 text-xs text-slate-400">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 border-t border-border/60 pt-4 sm:pt-6 text-xs text-slate-400">
                 <div className="space-y-1.5">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300">Methodology</span>
                   <p className="leading-relaxed">{report.methodology}</p>
@@ -345,14 +348,14 @@ ${report.citations.map((c) => `- [${c.citation_order}] **${c.filename}** (Page: 
               </div>
             </div>
           ) : activeFormat === "markdown" ? (
-            <div className="glass-panel p-6 rounded-2xl border border-border">
-              <pre className="text-xs font-mono text-slate-300 whitespace-pre-wrap leading-relaxed overflow-x-auto">
+            <div className="glass-panel p-4 sm:p-6 rounded-2xl border border-border overflow-x-auto">
+              <pre className="text-xs font-mono text-slate-300 whitespace-pre-wrap break-words leading-relaxed">
                 {markdownContent}
               </pre>
             </div>
           ) : (
-            <div className="glass-panel p-6 rounded-2xl border border-border">
-              <pre className="text-xs font-mono text-cyan-300 whitespace-pre-wrap leading-relaxed overflow-x-auto">
+            <div className="glass-panel p-4 sm:p-6 rounded-2xl border border-border overflow-x-auto">
+              <pre className="text-xs font-mono text-cyan-300 whitespace-pre-wrap break-words leading-relaxed">
                 {JSON.stringify(report, null, 2)}
               </pre>
             </div>
@@ -376,3 +379,4 @@ export default function ReportsPage() {
     </Suspense>
   );
 }
+

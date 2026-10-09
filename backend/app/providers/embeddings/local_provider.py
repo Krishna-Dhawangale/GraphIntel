@@ -1,8 +1,14 @@
+import functools
 import hashlib
 import math
 from typing import List
 
 from app.providers.embeddings.base import EmbeddingProvider
+
+
+@functools.lru_cache(maxsize=32768)
+def _hash_word_to_int(word: str) -> int:
+    return int(hashlib.sha256(word.encode("utf-8")).hexdigest()[:16], 16)
 
 
 class LocalDeterministicEmbeddingProvider(EmbeddingProvider):
@@ -22,8 +28,7 @@ class LocalDeterministicEmbeddingProvider(EmbeddingProvider):
             return vec
 
         for word in words:
-            # Hash word to multiple dimensions to create semantic projection
-            h = int(hashlib.sha256(word.encode("utf-8")).hexdigest(), 16)
+            h = _hash_word_to_int(word)
             for i in range(4):
                 slot = (h + i * 997) % self._dim
                 sign = 1.0 if ((h >> (i * 4)) & 1) == 1 else -1.0

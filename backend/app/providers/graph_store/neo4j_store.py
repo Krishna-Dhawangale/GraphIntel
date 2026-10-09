@@ -3,8 +3,16 @@ from datetime import datetime, timezone
 import hashlib
 import re
 from typing import Any, Dict, List, Optional
-from neo4j import AsyncGraphDatabase, AsyncDriver
-from neo4j.exceptions import ServiceUnavailable, DriverError
+try:
+    from neo4j import AsyncGraphDatabase, AsyncDriver
+    from neo4j.exceptions import ServiceUnavailable, DriverError
+    HAS_NEO4J = True
+except ImportError:
+    AsyncGraphDatabase = None
+    AsyncDriver = None
+    ServiceUnavailable = Exception
+    DriverError = Exception
+    HAS_NEO4J = False
 
 from app.core.config import settings
 from app.core.logging import logger
@@ -31,6 +39,22 @@ ALLOWED_LABELS = {t.value for t in NodeType}
 ALLOWED_RELATIONSHIPS = {r.value for r in RelationshipType}
 
 
+import socket
+from urllib.parse import urlparse
+
+
+def _is_socket_reachable(uri: str, timeout: float = 0.2) -> bool:
+    """Instant TCP socket probe to verify Neo4j host/port without driver timeout hangs."""
+    try:
+        parsed = urlparse(uri)
+        host = parsed.hostname or "localhost"
+        port = parsed.port or 7687
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except Exception:
+        return False
+
+
 class Neo4jGraphStore(GraphStore):
     """Production Neo4j Knowledge Graph store with asynchronous driver and safe Cypher execution,
     featuring transparent fallback to InMemoryGraphStore if the Neo4j instance is offline or unreachable."""
@@ -54,6 +78,15 @@ class Neo4jGraphStore(GraphStore):
     async def is_available(self) -> bool:
         if self._is_available is not None:
             return self._is_available
+
+        if not HAS_NEO4J or AsyncGraphDatabase is None:
+            self._is_available = False
+            return False
+
+        # Instant 0.2s TCP pre-check before calling heavy Neo4j driver
+        if not _is_socket_reachable(self.uri, timeout=0.2):
+            self._is_available = False
+            return False
 
         try:
             driver = AsyncGraphDatabase.driver(

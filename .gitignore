@@ -19,6 +19,7 @@ node_modules/
 out/
 dist/
 coverage/
+*.tsbuildinfo
 
 # Local databases, uploads, and generated reports
 *.db

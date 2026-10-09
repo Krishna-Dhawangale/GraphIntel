@@ -206,8 +206,8 @@ class IngestionService:
                     chunk_metadata=chunk_res.metadata,
                 )
                 db_chunks.append(db_chunk)
-                self.db.add(db_chunk)
 
+            self.db.add_all(db_chunks)
             await self.db.flush()
 
             # 5. Generate embeddings in batches
@@ -237,22 +237,24 @@ class IngestionService:
 
             await self.vector_store.upsert(vector_records)
 
-            # 7. Knowledge Graph Synchronization
+            # 7. Knowledge Graph Synchronization (Batch Processed)
             try:
                 graph_service = GraphService()
-                total_ent = 0
-                total_rel = 0
-                for idx, c in enumerate(chunks):
-                    chunk_uuid = db_chunks[idx].id
-                    stats = await graph_service.sync_chunk_to_graph(
-                        user_id=user_id,
-                        document_id=doc.id,
-                        chunk_id=chunk_uuid,
-                        text=c.text,
-                        page_number=c.page_number,
-                    )
-                    total_ent += stats.get("entities_synced", 0)
-                    total_rel += stats.get("relationships_synced", 0)
+                graph_chunk_payloads = [
+                    {
+                        "chunk_id": db_chunks[idx].id,
+                        "text": c.text,
+                        "page_number": c.page_number,
+                    }
+                    for idx, c in enumerate(chunks)
+                ]
+                stats = await graph_service.sync_chunks_to_graph(
+                    user_id=user_id,
+                    document_id=doc.id,
+                    chunks=graph_chunk_payloads,
+                )
+                total_ent = stats.get("entities_synced", 0)
+                total_rel = stats.get("relationships_synced", 0)
 
                 log_event(
                     "graph_sync_completed",

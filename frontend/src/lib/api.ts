@@ -131,7 +131,7 @@ export const api = {
       ),
     chunks: (id: string, skip = 0, limit = 100) =>
       request<DocumentChunk[]>(`/documents/${id}/chunks?skip=${skip}&limit=${limit}`),
-    upload: (file: File, title?: string, syncProcess = true) => {
+    upload: (file: File, title?: string, syncProcess = false) => {
       const formData = new FormData();
       formData.append("file", file);
       if (title) formData.append("title", title);
@@ -198,5 +198,9 @@ export const api = {
   },
   health: {
     check: () => request<{ status: string; services: Record<string, string> }>("/health"),
+  },
+  reports: {
+    // Placeholder for future server-side report storage
+    list: () => Promise.resolve([] as any[]),
   },
 };

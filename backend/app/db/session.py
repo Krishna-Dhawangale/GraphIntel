@@ -10,9 +10,14 @@ from app.core.config import settings
 sync_db_url = settings.DATABASE_URL
 async_db_url = settings.ASYNC_DATABASE_URL
 
-# Handle SQLite connect args if sqlite is used
+# Handle connect args
 sync_args = {"check_same_thread": False} if "sqlite" in sync_db_url else {}
-async_args = {"check_same_thread": False} if "sqlite" in async_db_url else {}
+if "sqlite" in async_db_url:
+    async_args = {"check_same_thread": False}
+elif "asyncpg" in async_db_url:
+    async_args = {"statement_cache_size": 0}
+else:
+    async_args = {}
 
 # Engines
 sync_engine = create_engine(sync_db_url, echo=False, connect_args=sync_args)

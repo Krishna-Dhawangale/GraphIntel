@@ -25,6 +25,7 @@ import {
 import Sidebar from "../../components/Sidebar";
 import { api } from "../../lib/api";
 import { GraphEdge, GraphNode, GraphVisualizationResponse } from "../../types";
+import { toast } from "../../lib/toast";
 
 const NODE_TYPE_COLORS: Record<string, { bg: string; text: string; fill: string; stroke: string }> = {
   Company: { bg: "bg-blue-500/10", text: "text-blue-400", fill: "#3b82f6", stroke: "#60a5fa" },
@@ -68,8 +69,12 @@ export default function GraphExplorerPage() {
       if (data.nodes.length > 0 && !selectedNode) {
         setSelectedNode(data.nodes[0]);
       }
+      if (data.nodes.length === 0) {
+        toast.info("No graph entities found. Upload and ingest documents first.", { duration: 4000 });
+      }
     } catch (e) {
       console.error("Failed to load knowledge graph", e);
+      toast.error("Failed to load knowledge graph. Check Neo4j connection.", { duration: 5000 });
     } finally {
       setLoading(false);
     }
@@ -85,8 +90,14 @@ export default function GraphExplorerPage() {
     try {
       const paths = await api.graph.paths(sourceEntity.trim(), targetEntity.trim() || undefined, hopDepth);
       setDiscoveredPaths(paths || []);
-    } catch (e) {
+      if ((paths || []).length === 0) {
+        toast.info(`No paths found from "${sourceEntity}". Try a different entity name.`, { duration: 4000 });
+      } else {
+        toast.success(`Found ${paths.length} reasoning path(s).`, { duration: 2500 });
+      }
+    } catch (e: any) {
       console.error(e);
+      toast.error(e.message || "Path discovery failed.", { duration: 4000 });
     } finally {
       setPathLoading(false);
     }
@@ -144,49 +155,50 @@ export default function GraphExplorerPage() {
   });
 
   return (
-    <div className="flex">
+    <div className="flex min-h-[calc(100vh-4rem)]">
       <Sidebar />
-      <main className="flex-1 flex flex-col h-[calc(100vh-4rem)] max-w-7xl mx-auto overflow-hidden">
+      <main className="flex-1 min-w-0 flex flex-col min-h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] max-w-7xl mx-auto overflow-hidden pb-20 lg:pb-0">
         {/* Top Control Bar */}
-        <div className="p-4 px-6 border-b border-border glass-panel flex flex-wrap items-center justify-between gap-3">
+        <div className="p-3.5 sm:p-4 px-4 sm:px-6 border-b border-border glass-panel flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0">
               <Share2 className="w-4 h-4" />
             </div>
-            <div>
-              <h1 className="text-base font-bold text-white">Enterprise Knowledge Graph Explorer</h1>
-              <p className="text-xs text-slate-400">
+            <div className="min-w-0">
+              <h1 className="text-sm sm:text-base font-bold text-white truncate">Enterprise Knowledge Graph Explorer</h1>
+              <p className="text-[11px] sm:text-xs text-slate-400 truncate">
                 Neo4j market topology with multi-hop reasoning paths and temporal filtering.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3 self-end sm:self-auto">
             {/* View Tab Selector */}
             <div className="flex items-center space-x-1 bg-slate-900 p-1 rounded-lg border border-border text-xs">
               <button
                 onClick={() => setActiveTab("network")}
-                className={`px-3 py-1 rounded-md font-medium transition ${
+                className={`px-2.5 sm:px-3 py-1 rounded-md text-xs font-medium transition ${
                   activeTab === "network" ? "bg-emerald-500 text-slate-950 font-semibold" : "text-slate-400 hover:text-white"
                 }`}
               >
-                Network Topology
+                Network
               </button>
               <button
                 onClick={() => setActiveTab("paths")}
-                className={`px-3 py-1 rounded-md font-medium transition ${
+                className={`px-2.5 sm:px-3 py-1 rounded-md text-xs font-medium transition ${
                   activeTab === "paths" ? "bg-emerald-500 text-slate-950 font-semibold" : "text-slate-400 hover:text-white"
                 }`}
               >
-                Multi-Hop Reasoning Paths
+                Multi-Hop Paths
               </button>
             </div>
 
             <button
               onClick={fetchGraph}
               disabled={loading}
-              className="p-2 rounded-lg bg-slate-900 border border-border text-slate-300 hover:text-white hover:bg-slate-800 transition"
+              className="p-1.5 sm:p-2 rounded-lg bg-slate-900 border border-border text-slate-300 hover:text-white hover:bg-slate-800 transition"
               title="Refresh Graph"
+              aria-label="Refresh Graph"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             </button>
@@ -194,13 +206,13 @@ export default function GraphExplorerPage() {
         </div>
 
         {activeTab === "network" ? (
-          <div className="flex-1 flex overflow-hidden">
-            {/* Left Interactive Canvas */}
-            <div className="flex-1 flex flex-col border-r border-border relative overflow-hidden bg-[#070b14]">
+          <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
+            {/* Left/Top Interactive Canvas */}
+            <div className="flex-1 flex flex-col border-b lg:border-b-0 lg:border-r border-border relative overflow-hidden bg-[#070b14] min-h-[380px] sm:min-h-[460px] lg:min-h-0">
               {/* Canvas Filters */}
-              <div className="p-3 border-b border-border/60 bg-slate-950/60 flex flex-wrap items-center justify-between gap-3 text-xs z-10">
-                <div className="flex items-center space-x-3">
-                  <div className="relative w-48">
+              <div className="p-2.5 sm:p-3 border-b border-border/60 bg-slate-950/60 flex flex-wrap items-center justify-between gap-2 text-xs z-10">
+                <div className="flex flex-wrap items-center gap-2 flex-1 min-w-[200px]">
+                  <div className="relative w-full sm:w-44">
                     <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2 pointer-events-none" />
                     <input
                       type="text"
@@ -214,7 +226,7 @@ export default function GraphExplorerPage() {
                   <select
                     value={selectedType}
                     onChange={(e) => setSelectedType(e.target.value)}
-                    className="px-2.5 py-1 bg-slate-900 border border-border rounded-lg text-xs text-slate-300 focus:outline-none focus:border-emerald-500"
+                    className="px-2 py-1 bg-slate-900 border border-border rounded-lg text-xs text-slate-300 focus:outline-none focus:border-emerald-500"
                   >
                     <option value="ALL">All Types ({graphData.nodes.length})</option>
                     {typesList.map((t) => (
@@ -227,7 +239,7 @@ export default function GraphExplorerPage() {
                   <select
                     value={temporalYear}
                     onChange={(e) => setTemporalYear(e.target.value)}
-                    className="px-2.5 py-1 bg-slate-900 border border-border rounded-lg text-xs text-slate-300 focus:outline-none focus:border-emerald-500"
+                    className="px-2 py-1 bg-slate-900 border border-border rounded-lg text-xs text-slate-300 focus:outline-none focus:border-emerald-500"
                   >
                     <option value="ALL">All Years</option>
                     <option value="2025">2025</option>
@@ -238,7 +250,7 @@ export default function GraphExplorerPage() {
                 </div>
 
                 {/* Zoom Controls */}
-                <div className="flex items-center space-x-1 bg-slate-900 p-0.5 rounded-lg border border-border">
+                <div className="flex items-center space-x-1 bg-slate-900 p-0.5 rounded-lg border border-border shrink-0">
                   <button
                     onClick={() => setZoom((z) => Math.min(2.0, z + 0.15))}
                     className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded"
@@ -268,7 +280,7 @@ export default function GraphExplorerPage() {
 
               {/* Interactive SVG Network Graph */}
               <div
-                className="flex-1 relative cursor-grab active:cursor-grabbing overflow-hidden"
+                className="flex-1 relative cursor-grab active:cursor-grabbing overflow-hidden touch-none select-none min-h-[320px]"
                 onMouseDown={(e) => {
                   setIsPanning(true);
                   setStartPan({ x: e.clientX - pan.x, y: e.clientY - pan.y });
@@ -280,6 +292,18 @@ export default function GraphExplorerPage() {
                 }}
                 onMouseUp={() => setIsPanning(false)}
                 onMouseLeave={() => setIsPanning(false)}
+                onTouchStart={(e) => {
+                  if (e.touches.length === 1) {
+                    setIsPanning(true);
+                    setStartPan({ x: e.touches[0].clientX - pan.x, y: e.touches[0].clientY - pan.y });
+                  }
+                }}
+                onTouchMove={(e) => {
+                  if (isPanning && e.touches.length === 1) {
+                    setPan({ x: e.touches[0].clientX - startPan.x, y: e.touches[0].clientY - startPan.y });
+                  }
+                }}
+                onTouchEnd={() => setIsPanning(false)}
               >
                 {loading ? (
                   <div className="h-full flex items-center justify-center text-xs text-slate-500">
@@ -293,6 +317,7 @@ export default function GraphExplorerPage() {
                 ) : (
                   <svg
                     className="w-full h-full select-none"
+                    viewBox="0 0 760 600"
                     style={{
                       transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
                       transformOrigin: "center center",
@@ -402,8 +427,8 @@ export default function GraphExplorerPage() {
               </div>
             </div>
 
-            {/* Right Node & Relationship Details Sidebar */}
-            <div className="w-80 border-l border-border glass-panel p-5 overflow-y-auto space-y-5">
+            {/* Right/Bottom Node & Relationship Details Sidebar */}
+            <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-border glass-panel p-4 sm:p-5 overflow-y-auto space-y-4 sm:space-y-5 shrink-0">
               {selectedNode ? (
                 <>
                   <div className="space-y-2 border-b border-border/60 pb-4">
@@ -414,11 +439,11 @@ export default function GraphExplorerPage() {
                     >
                       {selectedNode.type}
                     </span>
-                    <h2 className="text-xl font-bold text-white tracking-tight">{selectedNode.label}</h2>
-                    <p className="text-xs text-slate-400 font-mono">ID: {selectedNode.id}</p>
+                    <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight">{selectedNode.label}</h2>
+                    <p className="text-xs text-slate-400 font-mono truncate">ID: {selectedNode.id}</p>
                     <button
                       onClick={() => expandNeighbors(selectedNode.id)}
-                      className="mt-2 w-full py-1.5 px-3 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-semibold flex items-center justify-center space-x-1.5 transition"
+                      className="mt-2 w-full py-2 px-3 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-semibold flex items-center justify-center space-x-1.5 transition"
                     >
                       <Share2 className="w-3.5 h-3.5" />
                       <span>Expand 1-Hop Neighbors</span>
@@ -433,7 +458,7 @@ export default function GraphExplorerPage() {
                     {incidentEdges.length === 0 ? (
                       <p className="text-xs text-slate-500">No active relationships connected.</p>
                     ) : (
-                      <div className="space-y-2">
+                      <div className="space-y-2 max-h-72 lg:max-h-none overflow-y-auto">
                         {incidentEdges.map((edge) => {
                           const isSource = edge.source === selectedNode.id;
                           const otherNodeId = isSource ? edge.target : edge.source;
@@ -470,7 +495,7 @@ export default function GraphExplorerPage() {
                   </div>
                 </>
               ) : (
-                <div className="h-full flex items-center justify-center text-xs text-slate-500 text-center">
+                <div className="h-40 lg:h-full flex items-center justify-center text-xs text-slate-500 text-center">
                   Select a node from the network graph to inspect relationships and temporal facts.
                 </div>
               )}
@@ -478,9 +503,9 @@ export default function GraphExplorerPage() {
           </div>
         ) : (
           /* Multi-Hop Path Visualizer Tab */
-          <div className="flex-1 p-6 overflow-y-auto space-y-6">
-            <div className="glass-panel p-6 rounded-2xl border border-border space-y-4">
-              <h2 className="text-lg font-bold text-white">Multi-Hop Path Discovery</h2>
+          <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-6">
+            <div className="glass-panel p-4 sm:p-6 rounded-2xl border border-border space-y-4">
+              <h2 className="text-base sm:text-lg font-bold text-white">Multi-Hop Path Discovery</h2>
               <p className="text-xs text-slate-400">
                 Trace indirect relationship chains across companies, executives, startups, and acquisitions.
               </p>
@@ -571,7 +596,7 @@ export default function GraphExplorerPage() {
                             </div>
                           ))
                         ) : (
-                          <pre className="text-slate-300 text-xs">{JSON.stringify(path, null, 2)}</pre>
+                          <pre className="text-slate-300 text-xs overflow-x-auto">{JSON.stringify(path, null, 2)}</pre>
                         )}
                       </div>
                     </div>
@@ -585,3 +610,4 @@ export default function GraphExplorerPage() {
     </div>
   );
 }
+

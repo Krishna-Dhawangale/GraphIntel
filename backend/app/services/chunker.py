@@ -1,3 +1,4 @@
+import re
 import uuid
 from typing import Any, Dict, List, Optional
 
@@ -7,6 +8,13 @@ from pydantic import BaseModel
 from app.core.config import settings
 from app.providers.parsers.base import ParsedSection
 from app.services.text_processor import TextProcessor
+
+_SENTENCE_ENDINGS_RE = re.compile(r'(?<=[.!?])\s+(?=[A-Z0-9"\'])')
+
+try:
+    _GLOBAL_TOKENIZER = tiktoken.get_encoding("cl100k_base")
+except Exception:
+    _GLOBAL_TOKENIZER = None
 
 
 class ChunkResult(BaseModel):
@@ -30,26 +38,21 @@ class DocumentChunker:
     ):
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
-        try:
-            self.tokenizer = tiktoken.get_encoding("cl100k_base")
-        except Exception:
-            self.tokenizer = None
+        self.tokenizer = _GLOBAL_TOKENIZER
 
     def count_tokens(self, text: str) -> int:
+        if not text:
+            return 0
         if self.tokenizer:
             try:
                 return len(self.tokenizer.encode(text))
             except Exception:
                 pass
-        # Fallback estimation: ~4 chars per token
+        # Fast fallback estimation: ~4 chars per token
         return max(1, len(text) // 4)
 
     def split_into_sentences(self, text: str) -> List[str]:
-        # Split on sentence boundaries (. ! ?) while keeping abbreviations in mind
-        import re
-
-        sentence_endings = re.compile(r'(?<=[.!?])\s+(?=[A-Z0-9"\'])')
-        parts = sentence_endings.split(text)
+        parts = _SENTENCE_ENDINGS_RE.split(text)
         return [p.strip() for p in parts if p.strip()]
 
     def chunk_section(
@@ -103,7 +106,7 @@ class DocumentChunker:
 
         # Assemble units into chunks respecting chunk_size and chunk_overlap
         chunks: List[ChunkResult] = []
-        current_chunk_units: List[str] = []
+        current_chunk_tuples: List[tuple] = []
         current_tokens = 0
         chunk_idx = start_chunk_index
 
@@ -112,12 +115,12 @@ class DocumentChunker:
             unit = units[i]
             unit_tokens = self.count_tokens(unit)
 
-            if current_tokens + unit_tokens <= self.chunk_size or not current_chunk_units:
-                current_chunk_units.append(unit)
+            if not current_chunk_tuples or (current_tokens + unit_tokens <= self.chunk_size):
+                current_chunk_tuples.append((unit, unit_tokens))
                 current_tokens += unit_tokens
                 i += 1
             else:
-                chunk_text = "\n\n".join(current_chunk_units)
+                chunk_text = "\n\n".join(u for u, _ in current_chunk_tuples)
                 chunks.append(
                     ChunkResult(
                         chunk_id=str(uuid.uuid4()),
@@ -126,7 +129,7 @@ class DocumentChunker:
                         text=chunk_text,
                         page_number=section.page_number,
                         section=section.section,
-                        token_count=self.count_tokens(chunk_text),
+                        token_count=current_tokens,
                         metadata={
                             **section.metadata,
                             "page": section.page_number,
@@ -136,22 +139,26 @@ class DocumentChunker:
                 )
                 chunk_idx += 1
 
-                # Calculate overlap backwards
-                overlap_units: List[str] = []
+                # Calculate overlap backwards using already computed token counts
+                overlap_tuples: List[tuple] = []
                 overlap_tokens = 0
-                for rev_unit in reversed(current_chunk_units):
-                    rev_tokens = self.count_tokens(rev_unit)
-                    if overlap_tokens + rev_tokens <= self.chunk_overlap:
-                        overlap_units.insert(0, rev_unit)
-                        overlap_tokens += rev_tokens
+                for rev_u, rev_tok in reversed(current_chunk_tuples):
+                    if overlap_tokens + rev_tok <= self.chunk_overlap:
+                        overlap_tuples.insert(0, (rev_u, rev_tok))
+                        overlap_tokens += rev_tok
                     else:
                         break
 
-                current_chunk_units = overlap_units
+                # Ensure strictly forward progress: overlap must not contain all items
+                if len(overlap_tuples) >= len(current_chunk_tuples):
+                    overlap_tuples = overlap_tuples[1:]
+                    overlap_tokens = sum(tok for _, tok in overlap_tuples)
+
+                current_chunk_tuples = overlap_tuples
                 current_tokens = overlap_tokens
 
-        if current_chunk_units:
-            chunk_text = "\n\n".join(current_chunk_units)
+        if current_chunk_tuples:
+            chunk_text = "\n\n".join(u for u, _ in current_chunk_tuples)
             chunks.append(
                 ChunkResult(
                     chunk_id=str(uuid.uuid4()),
@@ -160,7 +167,7 @@ class DocumentChunker:
                     text=chunk_text,
                     page_number=section.page_number,
                     section=section.section,
-                    token_count=self.count_tokens(chunk_text),
+                    token_count=current_tokens,
                     metadata={
                         **section.metadata,
                         "page": section.page_number,
