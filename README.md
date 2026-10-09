@@ -238,6 +238,32 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
+## Deploying to Vercel and Render
+
+The repository includes a Render Blueprint at [`render.yaml`](./render.yaml). It creates the FastAPI web service and a managed PostgreSQL database. The service runs Alembic migrations before starting Uvicorn.
+
+### Deploy the backend on Render
+
+1. Push the repository to GitHub and create a new **Blueprint** in Render using that repository.
+2. Review the resources and deploy the `graphintel-api` service and `graphintel-db` database.
+3. After the service is created, open its environment settings and replace `BACKEND_CORS_ORIGINS` and `FRONTEND_URL` with your deployed Vercel origin, for example `["https://graphintel.vercel.app"]` and `https://graphintel.vercel.app`. Keep `ALLOWED_HOSTS` set to the Render hostname (or your API custom domain).
+4. Wait for the service health check at `/api/v1/health/live` to pass. The API docs are available at `/api/v1/docs`.
+
+### Deploy the frontend on Vercel
+
+1. Import the same GitHub repository into Vercel.
+2. Set the **Root Directory** to `frontend` and leave the detected Next.js build settings at their defaults.
+3. Add the environment variable `NEXT_PUBLIC_API_URL` with the Render API URL, including the API prefix: `https://graphintel-api.onrender.com/api/v1`.
+4. Deploy. If Vercel assigns a different production domain, update `BACKEND_CORS_ORIGINS` and `FRONTEND_URL` in Render and redeploy/restart the API.
+
+### Production feature configuration
+
+The starter Blueprint uses local document storage, in-memory vector and graph stores, a mock LLM, and a simple reranker so the API can start without additional vendors. These local/in-memory services are not durable across Render restarts and do not provide production RAG behavior. Before relying on document ingestion or research queries, configure durable object storage and managed vector/graph services, then set `STORAGE_PROVIDER`, `VECTOR_STORE_PROVIDER`, `GRAPH_STORE_PROVIDER`, their credentials, and the desired `LLM_PROVIDER`/API keys in Render. Configure SMTP and set `EMAIL_ENABLED=true` to deliver password-reset emails; otherwise reset links are logged by the API.
+
+For Google sign-in, add the production frontend origin and callback URL to the Google OAuth client configuration and set the matching `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REDIRECT_URI` values in Render.
+
+---
+
 ## Configuration Reference (`.env`)
 
 All parameters are configurable without hardcoding credentials:
