@@ -23,6 +23,7 @@ import { api } from "../lib/api";
 import { removeToken } from "../lib/auth";
 import { User } from "../types";
 import { toast } from "../lib/toast";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Navbar() {
   const router = useRouter();
@@ -131,6 +132,8 @@ export default function Navbar() {
           <span className={`w-2 h-2 rounded-full ${healthy ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
           <span className="text-[11px] font-medium">{healthy ? "Operational" : "Degraded"}</span>
         </div>
+
+        <ThemeToggle />
 
         {user ? (
           <div className="flex items-center space-x-2 sm:space-x-3">
@@ -262,8 +265,9 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* User profile / session in drawer footer */}
+          {/* Theme toggle & User profile / session in drawer footer */}
           <div className="pt-4 border-t border-border/60 space-y-3">
+            <ThemeToggle showLabel className="w-full justify-center py-2.5" />
             {user ? (
               <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/80 border border-border">
                 <div className="flex items-center space-x-3 min-w-0">

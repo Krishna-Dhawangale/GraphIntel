@@ -6,9 +6,19 @@
 
 @layer base {
   :root {
-    --background: 224 71% 4%;
-    --foreground: 213 31% 91%;
+    --background: #090d16;
+    --foreground: #e2e8f0;
     --border: #1e293b;
+    --card: #131d35;
+    --surface: #0f172a;
+  }
+
+  html.light {
+    --background: #f8fafc;
+    --foreground: #0f172a;
+    --border: #e2e8f0;
+    --card: #ffffff;
+    --surface: #f1f5f9;
   }
 
   * {
@@ -16,13 +26,14 @@
   }
 
   body {
-    background-color: #090d16;
-    color: #e2e8f0;
+    background-color: var(--background);
+    color: var(--foreground);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     -webkit-tap-highlight-color: transparent;
     font-feature-settings: 'cv11', 'ss01';
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
 
   /* Monospace font override for code elements */
@@ -338,6 +349,175 @@ button:focus-visible {
 
 .progress-animate {
   animation: progress-bar 2s ease-in-out forwards;
+}
+
+/* ============================================
+   LIGHT MODE THEME ADAPTATIONS
+   ============================================ */
+html.light {
+  color-scheme: light;
+}
+
+html.light body {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* Glassmorphism in Light Mode */
+html.light .glass-panel {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+html.light .glass-card {
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.04);
+}
+
+html.light .glass-card:hover {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: #ffffff;
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.08);
+}
+
+/* Light Mode Skeleton */
+html.light .skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(226, 232, 240, 0.8) 25%,
+    rgba(241, 245, 249, 0.9) 50%,
+    rgba(226, 232, 240, 0.8) 75%
+  );
+  background-size: 200% 100%;
+}
+
+/* Light Mode Toast */
+html.light .toast {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+}
+
+html.light .toast-success {
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #065f46;
+}
+
+html.light .toast-error {
+  border-color: rgba(244, 63, 94, 0.4);
+  color: #9f1239;
+}
+
+html.light .toast-info {
+  border-color: rgba(6, 182, 212, 0.4);
+  color: #155e75;
+}
+
+html.light .toast-warning {
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #92400e;
+}
+
+/* Text Adaptations in Light Mode */
+html.light .text-white {
+  color: #0f172a !important;
+}
+
+html.light .text-slate-100 {
+  color: #0f172a !important;
+}
+
+html.light .text-slate-200 {
+  color: #1e293b !important;
+}
+
+html.light .text-slate-300 {
+  color: #334155 !important;
+}
+
+html.light .text-slate-400 {
+  color: #64748b !important;
+}
+
+/* Surfaces and Panels in Light Mode */
+html.light .bg-\[\#090d16\],
+html.light .bg-\[\#0b101d\],
+html.light .bg-slate-950,
+html.light .bg-slate-950\/90,
+html.light .bg-slate-950\/80,
+html.light .bg-slate-900,
+html.light .bg-slate-900\/90,
+html.light .bg-slate-900\/80,
+html.light .bg-slate-900\/60 {
+  background-color: #ffffff !important;
+}
+
+html.light .bg-slate-800,
+html.light .bg-slate-800\/80,
+html.light .bg-slate-800\/60,
+html.light .bg-slate-800\/50,
+html.light .bg-slate-800\/40 {
+  background-color: #f1f5f9 !important;
+}
+
+html.light .hover\:bg-slate-800:hover,
+html.light .hover\:bg-slate-800\/80:hover,
+html.light .hover\:bg-slate-800\/60:hover {
+  background-color: #e2e8f0 !important;
+}
+
+/* Borders in Light Mode */
+html.light .border-border,
+html.light .border-slate-800,
+html.light .border-slate-700,
+html.light .border-slate-700\/70,
+html.light .border-slate-800\/70,
+html.light .border-slate-800\/60,
+html.light .border-border\/70,
+html.light .border-border\/60,
+html.light .border-border\/30 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Form Inputs in Light Mode */
+html.light input:not([type="checkbox"]):not([type="radio"]),
+html.light textarea,
+html.light select {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Sidebar in Light Mode */
+html.light aside {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Code blocks in Light Mode */
+html.light .prose-dark {
+  color: #334155 !important;
+}
+
+html.light .prose-dark code {
+  background: #f1f5f9 !important;
+  color: #059669 !important;
+  border: 1px solid #e2e8f0;
+}
+
+html.light .prose-dark pre {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
 }
 
 /* ============================================

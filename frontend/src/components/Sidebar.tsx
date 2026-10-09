@@ -14,6 +14,7 @@ import {
   Shield,
   Sparkles,
 } from "lucide-react";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -97,7 +98,9 @@ export default function Sidebar() {
           </div>
         </div>
 
-        <div className="p-3 bg-slate-900/80 rounded-xl border border-border/70 text-xs">
+        <div className="space-y-3">
+          <ThemeToggle showLabel className="w-full justify-center py-2" />
+          <div className="p-3 bg-slate-900/80 rounded-xl border border-border/70 text-xs">
           <div className="flex items-center space-x-2 text-emerald-400 mb-1">
             <Shield className="w-4 h-4" />
             <span className="font-semibold">Security Isolation</span>
@@ -114,6 +117,7 @@ export default function Sidebar() {
             <span>FastAPI Swagger Docs</span>
             <ExternalLink className="w-3 h-3" />
           </a>
+        </div>
         </div>
       </aside>
 

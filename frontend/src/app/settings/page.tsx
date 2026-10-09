@@ -8,10 +8,13 @@ import {
   ExternalLink,
   Key,
   Lock,
+  Monitor,
+  Moon,
   RefreshCw,
   Server,
   Settings,
   Shield,
+  Sun,
   User as UserIcon,
 } from "lucide-react";
 import Sidebar from "../../components/Sidebar";
@@ -19,8 +22,10 @@ import { api } from "../../lib/api";
 import { formatDate } from "../../lib/utils";
 import { AuditLogItem, User } from "../../types";
 import { toast } from "../../lib/toast";
+import { useTheme } from "../../context/ThemeContext";
 
 export default function SettingsPage() {
+  const { theme, setTheme } = useTheme();
   const [user, setUser] = useState<User | null>(null);
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
@@ -100,6 +105,86 @@ export default function SettingsPage() {
             </div>
           </div>
         )}
+
+        {/* Appearance & Theme Settings Card */}
+        <div className="glass-panel p-4 sm:p-6 rounded-2xl border border-border space-y-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center shrink-0">
+              <Sun className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-base sm:text-lg font-bold text-white">Appearance & Workspace Theme</h2>
+              <p className="text-xs text-slate-400">Choose your visual aesthetic, light / dark mode, and contrast style</p>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-border/60">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setTheme("light");
+                  toast.info("Switched to Light Mode", { duration: 2000 });
+                }}
+                className={`p-3.5 rounded-xl border flex items-center space-x-3 transition-all text-left ${
+                  theme === "light"
+                    ? "border-emerald-500 bg-emerald-500/10 text-emerald-400 shadow-sm"
+                    : "border-border bg-slate-900/60 hover:bg-slate-800/80 text-slate-300"
+                }`}
+              >
+                <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400 shrink-0">
+                  <Sun className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-white">Light Mode</p>
+                  <p className="text-[10px] text-slate-400">Crisp daytime readability</p>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setTheme("dark");
+                  toast.info("Switched to Dark Mode", { duration: 2000 });
+                }}
+                className={`p-3.5 rounded-xl border flex items-center space-x-3 transition-all text-left ${
+                  theme === "dark"
+                    ? "border-emerald-500 bg-emerald-500/10 text-emerald-400 shadow-sm"
+                    : "border-border bg-slate-900/60 hover:bg-slate-800/80 text-slate-300"
+                }`}
+              >
+                <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 shrink-0">
+                  <Moon className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-white">Dark Mode</p>
+                  <p className="text-[10px] text-slate-400">Deep blacks & glowing accents</p>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setTheme("system");
+                  toast.info("Theme set to match System preferences", { duration: 2000 });
+                }}
+                className={`p-3.5 rounded-xl border flex items-center space-x-3 transition-all text-left ${
+                  theme === "system"
+                    ? "border-emerald-500 bg-emerald-500/10 text-emerald-400 shadow-sm"
+                    : "border-border bg-slate-900/60 hover:bg-slate-800/80 text-slate-300"
+                }`}
+              >
+                <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400 shrink-0">
+                  <Monitor className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-white">System Preference</p>
+                  <p className="text-[10px] text-slate-400">Syncs with operating system</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
 
         {/* Distributed Endpoints & Architecture Links */}
         <div className="glass-panel p-4 sm:p-6 rounded-2xl border border-border space-y-4">
