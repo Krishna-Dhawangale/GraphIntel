@@ -1,23 +1,15 @@
 from typing import AsyncGenerator
 
 from sqlalchemy import create_engine
-from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 from app.core.config import settings
+from app.db.urls import normalize_postgres_driver
 
 # Determine sync and async database URLs
-sync_db_url = settings.DATABASE_URL
-async_db_url = settings.ASYNC_DATABASE_URL
-if async_db_url:
-    parsed_async_db_url = make_url(async_db_url)
-    if parsed_async_db_url.get_backend_name() in {"postgres", "postgresql"} and (
-        parsed_async_db_url.get_driver_name() != "asyncpg"
-    ):
-        async_db_url = parsed_async_db_url.set(drivername="postgresql+asyncpg").render_as_string(
-            hide_password=False
-        )
+sync_db_url = normalize_postgres_driver(settings.DATABASE_URL, "psycopg2")
+async_db_url = normalize_postgres_driver(settings.ASYNC_DATABASE_URL, "asyncpg")
 
 # Handle connect args
 sync_args = {"check_same_thread": False} if "sqlite" in sync_db_url else {}

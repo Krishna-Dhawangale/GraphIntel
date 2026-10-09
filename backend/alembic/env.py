@@ -1,16 +1,19 @@
 import os
 import sys
 from logging.config import fileConfig
+
 from sqlalchemy import engine_from_config, pool
+
 from alembic import context
 
 # Add backend directory to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from app.core.config import settings
-from app.models.base import Base
 # Ensure all models are imported so Alembic registers them
 import app.models  # noqa
+from app.core.config import settings
+from app.db.urls import normalize_postgres_driver
+from app.models.base import Base
 
 config = context.config
 
@@ -22,7 +25,7 @@ target_metadata = Base.metadata
 
 def get_url():
     # Use sync database URL for migrations
-    return settings.DATABASE_URL
+    return normalize_postgres_driver(settings.DATABASE_URL, "psycopg2")
 
 
 def run_migrations_offline() -> None:
