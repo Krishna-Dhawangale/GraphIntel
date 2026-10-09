@@ -240,12 +240,12 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Deploying to Vercel and Render
 
-The repository includes a Render Blueprint at [`render.yaml`](./render.yaml). It creates the FastAPI web service and a managed PostgreSQL database. The service runs Alembic migrations before starting Uvicorn.
+The repository includes a Render Blueprint at [`render.yaml`](./render.yaml). It creates a free-tier FastAPI web service and PostgreSQL database. The service runs Alembic migrations before starting Uvicorn. Free-tier availability and database expiry/retention limits are controlled by Render; check the resource details shown during Blueprint review and back up any data before a listed expiry date.
 
 ### Deploy the backend on Render
 
 1. Push the repository to GitHub and create a new **Blueprint** in Render using that repository.
-2. Review the resources and deploy the `graphintel-api` service and `graphintel-db` database.
+2. Review the resources. Both are set to `free` in the Blueprint. If Render still asks for a payment method, check the resource plan shown on this screen and your account's verification requirements before proceeding; don't apply any resource that shows a charge unless you intend to pay.
 3. After the service is created, open its environment settings and replace `BACKEND_CORS_ORIGINS` and `FRONTEND_URL` with your deployed Vercel origin, for example `["https://graphintel.vercel.app"]` and `https://graphintel.vercel.app`. Keep `ALLOWED_HOSTS` set to the Render hostname (or your API custom domain).
 4. Wait for the service health check at `/api/v1/health/live` to pass. The API docs are available at `/api/v1/docs`.
 
@@ -258,7 +258,7 @@ The repository includes a Render Blueprint at [`render.yaml`](./render.yaml). It
 
 ### Production feature configuration
 
-The starter Blueprint uses local document storage, in-memory vector and graph stores, a mock LLM, and a simple reranker so the API can start without additional vendors. These local/in-memory services are not durable across Render restarts and do not provide production RAG behavior. Before relying on document ingestion or research queries, configure durable object storage and managed vector/graph services, then set `STORAGE_PROVIDER`, `VECTOR_STORE_PROVIDER`, `GRAPH_STORE_PROVIDER`, their credentials, and the desired `LLM_PROVIDER`/API keys in Render. Configure SMTP and set `EMAIL_ENABLED=true` to deliver password-reset emails; otherwise reset links are logged by the API.
+The free web service may sleep when idle, which can make the first request slow. Its local filesystem and in-memory vector/graph stores are temporary and are not durable across restarts or deploys. The starter Blueprint uses those providers, a mock LLM, and a simple reranker so the API can start without additional vendors; research and document features need managed providers for production use. Configure durable object storage and managed vector/graph services, then set `STORAGE_PROVIDER`, `VECTOR_STORE_PROVIDER`, `GRAPH_STORE_PROVIDER`, their credentials, and the desired `LLM_PROVIDER`/API keys in Render. Configure SMTP and set `EMAIL_ENABLED=true` to deliver password-reset emails; otherwise reset links are logged by the API.
 
 For Google sign-in, add the production frontend origin and callback URL to the Google OAuth client configuration and set the matching `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REDIRECT_URI` values in Render.
 
