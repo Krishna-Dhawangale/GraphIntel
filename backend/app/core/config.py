@@ -48,6 +48,17 @@ class Settings(BaseSettings):
 
         return json.loads(v)
 
+    @field_validator("ALLOWED_HOSTS", mode="before")
+    @classmethod
+    def assemble_allowed_hosts(cls, v: Union[str, List[str]]) -> List[str]:
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",")]
+        elif isinstance(v, list):
+            return v
+        import json
+
+        return json.loads(v)
+
     # Database
     POSTGRES_SERVER: str = "localhost"
     POSTGRES_PORT: int = 5432

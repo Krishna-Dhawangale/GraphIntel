@@ -30,7 +30,7 @@ services:
       - key: BACKEND_CORS_ORIGINS
         value: '["https://your-vercel-project.vercel.app"]'
       - key: ALLOWED_HOSTS
-        value: '["graphintel-api.onrender.com"]'
+        value: '["*"]'
       - key: FRONTEND_URL
         value: https://your-vercel-project.vercel.app
       - key: STORAGE_PROVIDER

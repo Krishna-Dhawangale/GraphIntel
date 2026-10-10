@@ -51,7 +51,25 @@ app.add_middleware(SecurityHeadersMiddleware)
 
 # Trusted Host Middleware
 if settings.ALLOWED_HOSTS and "*" not in settings.ALLOWED_HOSTS:
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.ALLOWED_HOSTS)
+    class ExemptHealthTrustedHostMiddleware:
+        """Allow internal container health check probes (Render/K8s) even when host validation is enforced."""
+        def __init__(self, app, allowed_hosts: list[str]):
+            self.app = app
+            self.inner = TrustedHostMiddleware(app, allowed_hosts=allowed_hosts)
+
+        async def __call__(self, scope, receive, send):
+            if scope["type"] == "http":
+                path = scope.get("path", "")
+                if path.startswith("/api/v1/health") or path in ("/", "/health"):
+                    return await self.app(scope, receive, send)
+            return await self.inner(scope, receive, send)
+
+    effective_allowed_hosts = list(settings.ALLOWED_HOSTS)
+    for host in ["localhost", "127.0.0.1", "*.onrender.com"]:
+        if host not in effective_allowed_hosts:
+            effective_allowed_hosts.append(host)
+
+    app.add_middleware(ExemptHealthTrustedHostMiddleware, allowed_hosts=effective_allowed_hosts)
 
 # CORS Middleware
 app.add_middleware(
