@@ -3,12 +3,20 @@ import type { Metadata, Viewport } from "next";
 import Navbar from "../components/Navbar";
 import ToastProvider from "../components/ToastProvider";
 import { ThemeProvider } from "../context/ThemeContext";
+import AuthGuard from "../components/AuthGuard";
 
 export const metadata: Metadata = {
   title: "GraphIntel — Market Intelligence & Document RAG Platform",
   description:
     "Production-grade Market Intelligence platform powering semantic document ingestion, vector retrieval, and grounded RAG with real citations.",
   keywords: "GraphRAG, knowledge graph, market intelligence, Neo4j, Qdrant, LangGraph",
+  icons: {
+    icon: [
+      { url: "/favicon.jpg", type: "image/jpeg" },
+    ],
+    apple: "/favicon.jpg",
+    shortcut: "/favicon.jpg",
+  },
 };
 
 export const viewport: Viewport = {
@@ -36,8 +44,10 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen antialiased selection:bg-emerald-500/30 selection:text-emerald-300">
         <ThemeProvider>
-          <Navbar />
-          {children}
+          <AuthGuard>
+            <Navbar />
+            {children}
+          </AuthGuard>
           <ToastProvider />
         </ThemeProvider>
       </body>
