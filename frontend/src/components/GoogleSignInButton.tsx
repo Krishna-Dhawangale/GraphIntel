@@ -55,10 +55,21 @@ export default function GoogleSignInButton({
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [manualToken, setManualToken] = useState("");
 
-  // Fetch client ID configuration from backend
+  // Fetch client ID configuration from environment or backend.
+  // The NEXT_PUBLIC_GOOGLE_CLIENT_ID env var is the authoritative source.
+  // The backend API is a fallback only when the env var is absent.
   useEffect(() => {
     let mounted = true;
+    const envClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
+    if (envClientId) {
+      // Env var present — configure immediately, no API call needed
+      setClientId(envClientId);
+      setIsConfigured(true);
+      return;
+    }
+
+    // No env var — try to get client_id from backend
     async function loadConfig() {
       try {
         const res = await api.auth.googleConfig();
@@ -70,7 +81,7 @@ export default function GoogleSignInButton({
             setIsConfigured(false);
           }
         }
-      } catch (err) {
+      } catch {
         if (mounted) {
           setIsConfigured(false);
         }
