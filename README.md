@@ -260,8 +260,6 @@ The repository includes a Render Blueprint at [`render.yaml`](./render.yaml). It
 
 The free web service may sleep when idle, which can make the first request slow. Its local filesystem and in-memory vector/graph stores are temporary and are not durable across restarts or deploys. The starter Blueprint uses those providers, a mock LLM, and a simple reranker so the API can start without additional vendors; research and document features need managed providers for production use. Configure durable object storage and managed vector/graph services, then set `STORAGE_PROVIDER`, `VECTOR_STORE_PROVIDER`, `GRAPH_STORE_PROVIDER`, their credentials, and the desired `LLM_PROVIDER`/API keys in Render. Configure SMTP and set `EMAIL_ENABLED=true` to deliver password-reset emails; otherwise reset links are logged by the API.
 
-For Google sign-in, add the production frontend origin and callback URL to the Google OAuth client configuration and set the matching `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REDIRECT_URI` values in Render.
-
 ---
 
 ## Configuration Reference (`.env`)

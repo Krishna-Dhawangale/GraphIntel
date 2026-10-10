@@ -117,13 +117,7 @@ export const api = {
         method: "POST",
         body: JSON.stringify(data),
       }),
-    googleConfig: () =>
-      request<{ client_id: string; enabled: boolean }>("/auth/google/config"),
-    googleLogin: (data: { credential?: string; id_token?: string; code?: string }) =>
-      request<{ access_token: string; refresh_token: string; token_type: string; expires_in: number }>("/auth/google", {
-        method: "POST",
-        body: JSON.stringify(data),
-      }),
+
     refresh: (refreshToken: string) =>
       request<{ access_token: string; refresh_token: string; token_type: string; expires_in: number }>("/auth/refresh", {
         method: "POST",

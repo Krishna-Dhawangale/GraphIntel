@@ -17,16 +17,6 @@ class LoginRequest(BaseModel):
     password: str
 
 
-class GoogleLoginRequest(BaseModel):
-    credential: Optional[str] = Field(None, description="Google ID Token from Google Identity Services")
-    id_token: Optional[str] = Field(None, description="Alternative Google ID Token parameter")
-    code: Optional[str] = Field(None, description="Google OAuth authorization code")
-
-
-class GoogleConfigResponse(BaseModel):
-    client_id: str
-    enabled: bool
-
 
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
