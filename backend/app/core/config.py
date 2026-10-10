@@ -27,7 +27,14 @@ class Settings(BaseSettings):
     GOOGLE_REDIRECT_URI: str = "http://localhost:3000/auth/callback/google"
 
     # CORS & Trusted Hosts
-    BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    BACKEND_CORS_ORIGINS: List[str] = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+        "http://localhost:3002",
+        "http://127.0.0.1:3002",
+    ]
     ALLOWED_HOSTS: List[str] = ["*"]
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
@@ -111,6 +118,17 @@ class Settings(BaseSettings):
     # RAG Settings
     TOP_K: int = 5
 
+    # Email / SMTP Configuration (for password reset)
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_TLS: bool = True
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+    EMAILS_FROM_EMAIL: str = "noreply@graphintel.ai"
+    EMAILS_FROM_NAME: str = "GraphIntel"
+    FRONTEND_URL: str = "http://localhost:3000"
+    EMAIL_ENABLED: bool = False  # Set True when SMTP credentials are configured
+
     # Resilience Timeouts
     LLM_TIMEOUT_SECONDS: float = 30.0
     NEO4J_TIMEOUT_SECONDS: float = 15.0
@@ -137,3 +155,6 @@ if settings.LANGCHAIN_API_KEY:
     os.environ["LANGCHAIN_API_KEY"] = settings.LANGCHAIN_API_KEY
     os.environ["LANGCHAIN_PROJECT"] = settings.LANGCHAIN_PROJECT
     os.environ["LANGCHAIN_ENDPOINT"] = settings.LANGCHAIN_ENDPOINT
+
+# Reload trigger for Google OAuth credentials
+

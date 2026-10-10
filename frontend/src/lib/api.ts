@@ -34,10 +34,20 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     headers["Content-Type"] = "application/json";
   }
 
-  let response = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      headers,
+    });
+  } catch (err: any) {
+    if (err?.name === "TypeError" || err?.message?.toLowerCase().includes("fetch")) {
+      throw new Error(
+        `Unable to reach backend API at ${API_BASE}. Please ensure the backend server is running.`
+      );
+    }
+    throw err;
+  }
 
   // Attempt automatic refresh on 401
   if (response.status === 401 && !endpoint.includes("/auth/login") && !endpoint.includes("/auth/refresh")) {
@@ -127,6 +137,16 @@ export const api = {
       });
     },
     me: () => request<User>("/auth/me"),
+    forgotPassword: (email: string) =>
+      request<{ message: string }>("/auth/forgot-password", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      }),
+    resetPassword: (token: string, new_password: string) =>
+      request<{ message: string }>("/auth/reset-password", {
+        method: "POST",
+        body: JSON.stringify({ token, new_password }),
+      }),
   },
   documents: {
     list: (skip = 0, limit = 50) =>

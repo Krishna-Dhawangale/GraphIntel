@@ -1,3 +1,5 @@
+import asyncio
+import hashlib
 import secrets
 import uuid
 from datetime import timedelta
@@ -5,7 +7,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -14,14 +16,18 @@ from app.core.rate_limit import rate_limit
 from app.core.redis import redis_manager
 from app.db.session import get_db
 from app.models.audit import AuditAction
+from app.models.password_reset import PasswordResetToken
 from app.models.user import User, UserRole
 from app.schemas.auth import (
+    ForgotPasswordRequest,
     GoogleConfigResponse,
     GoogleLoginRequest,
     LoginRequest,
     LogoutRequest,
+    MessageResponse,
     RefreshTokenRequest,
     RegisterRequest,
+    ResetPasswordRequest,
     Token,
 )
 from app.schemas.user import UserResponse
@@ -35,6 +41,7 @@ from app.security.jwt import (
 )
 from app.security.password import get_password_hash, verify_password
 from app.services.audit_service import log_audit_event
+from app.services.email_service import send_password_reset_email
 
 router = APIRouter()
 
@@ -427,3 +434,127 @@ async def get_current_user_profile(
 ):
     """Retrieve currently authenticated user profile including RBAC role and tenant ID."""
     return current_user
+
+
+# ---------------------------------------------------------------------------
+# Password Reset Flow
+# ---------------------------------------------------------------------------
+
+@router.post(
+    "/forgot-password",
+    response_model=MessageResponse,
+    dependencies=[Depends(rate_limit(max_requests=5, window_seconds=300, key_prefix="forgot_pwd"))],
+)
+async def forgot_password(
+    payload: ForgotPasswordRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Request a password reset link.
+
+    Always returns the same success message regardless of whether the email
+    exists, to prevent user enumeration attacks.
+    """
+    # Locate user — silently ignore if not found (anti-enumeration)
+    stmt = select(User).where(User.email == payload.email.lower().strip())
+    res = await db.execute(stmt)
+    user = res.scalar_one_or_none()
+
+    if user and user.is_active:
+        # Invalidate any previous unused tokens for this user
+        await db.execute(
+            update(PasswordResetToken)
+            .where(
+                PasswordResetToken.user_id == user.id,
+                PasswordResetToken.is_used == False,  # noqa: E712
+            )
+            .values(is_used=True)
+        )
+
+        # Create a new reset token
+        raw_token = secrets.token_urlsafe(64)
+        reset_token = PasswordResetToken(
+            user_id=user.id,
+            token_hash=hashlib.sha256(raw_token.encode("utf-8")).hexdigest(),
+        )
+        db.add(reset_token)
+        await db.commit()
+        await db.refresh(reset_token)
+
+        # Send email in a thread so it doesn't block the event loop
+        email_sent = await asyncio.to_thread(
+            send_password_reset_email,
+            user.email,
+            raw_token,
+            user.full_name,
+        )
+        if not email_sent:
+            reset_token.is_used = True
+            await db.commit()
+
+        client_ip = request.client.host if request.client else None
+        await log_audit_event(
+            db=db,
+            action="PASSWORD_RESET_REQUEST",
+            user_id=user.id,
+            tenant_id=user.tenant_id,
+            ip_address=client_ip,
+            metadata={"email": user.email},
+        )
+
+    # Always return the same response (anti-enumeration)
+    return MessageResponse(
+        message="If an account with that email exists, a password reset link has been sent."
+    )
+
+
+@router.post(
+    "/reset-password",
+    response_model=MessageResponse,
+    dependencies=[Depends(rate_limit(max_requests=10, window_seconds=300, key_prefix="reset_pwd"))],
+)
+async def reset_password(
+    payload: ResetPasswordRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Consume a valid reset token and update the user's password.
+    Tokens are single-use and expire after 30 minutes.
+    """
+    # Look up the token (joined with user)
+    token_hash = hashlib.sha256(payload.token.encode("utf-8")).hexdigest()
+    stmt = select(PasswordResetToken).where(PasswordResetToken.token_hash == token_hash)
+    res = await db.execute(stmt)
+    reset_token = res.scalar_one_or_none()
+
+    if not reset_token or not reset_token.is_valid:
+        raise BadRequestException(
+            "This password reset link is invalid or has expired. Please request a new one.",
+            error_code="INVALID_RESET_TOKEN",
+        )
+
+    user = reset_token.user
+    if not user or not user.is_active:
+        raise BadRequestException(
+            "Account not found or inactive.",
+            error_code="USER_INACTIVE",
+        )
+
+    # Update password and mark token as used
+    user.hashed_password = get_password_hash(payload.new_password)
+    reset_token.is_used = True
+    await db.commit()
+
+    client_ip = request.client.host if request.client else None
+    await log_audit_event(
+        db=db,
+        action="PASSWORD_RESET_SUCCESS",
+        user_id=user.id,
+        tenant_id=user.tenant_id,
+        ip_address=client_ip,
+        metadata={"email": user.email},
+    )
+
+    return MessageResponse(message="Your password has been updated successfully. You can now log in.")

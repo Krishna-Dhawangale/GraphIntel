@@ -102,3 +102,7 @@ class GraphStore(ABC):
     async def delete_document_graph_data(self, user_id: str, document_id: str) -> None:
         """Remove entities and relationships whose only source evidence was the deleted document."""
         pass
+
+    async def health_check(self) -> bool:
+        """Verify graph store connection or readiness."""
+        return True

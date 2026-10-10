@@ -5,13 +5,11 @@ import {
   Activity,
   CheckCircle2,
   Database,
-  ExternalLink,
   Key,
   Lock,
   Monitor,
   Moon,
   RefreshCw,
-  Server,
   Settings,
   Shield,
   Sun,
@@ -186,51 +184,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Distributed Endpoints & Architecture Links */}
-        <div className="glass-panel p-4 sm:p-6 rounded-2xl border border-border space-y-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
-              <Server className="w-4 h-4 sm:w-5 sm:h-5" />
-            </div>
-            <div className="min-w-0">
-              <h2 className="text-base sm:text-lg font-bold text-white">Platform Infrastructure & Endpoints</h2>
-              <p className="text-xs text-slate-400">Direct integration endpoints for SDK and automated workflows</p>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 pt-4 border-t border-border/60 text-xs">
-            <div className="p-3.5 rounded-xl bg-slate-900/60 border border-border space-y-1">
-              <span className="text-slate-400 font-semibold block">FastAPI OpenAPI Specification</span>
-              <a
-                href="http://localhost:8000/api/v1/docs"
-                target="_blank"
-                rel="noreferrer"
-                className="text-emerald-400 hover:underline flex items-center space-x-1 font-mono text-[11px]"
-              >
-                <span>/api/v1/docs</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-slate-900/60 border border-border space-y-1">
-              <span className="text-slate-400 font-semibold block">Qdrant Vector Engine</span>
-              <span className="text-white font-mono text-[11px] block">http://localhost:6333</span>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-slate-900/60 border border-border space-y-1 sm:col-span-2 md:col-span-1">
-              <span className="text-slate-400 font-semibold block">Neo4j Graph Browser</span>
-              <a
-                href="http://localhost:7474"
-                target="_blank"
-                rel="noreferrer"
-                className="text-cyan-400 hover:underline flex items-center space-x-1 font-mono text-[11px]"
-              >
-                <span>http://localhost:7474</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-          </div>
-        </div>
 
         {/* Admin Compliance Audit Log Inspector */}
         {(user?.role === "ADMIN" || user?.is_superuser) && (

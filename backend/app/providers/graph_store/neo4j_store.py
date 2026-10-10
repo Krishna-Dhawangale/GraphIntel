@@ -119,6 +119,11 @@ class Neo4jGraphStore(GraphStore):
             await self._driver.close()
             self._driver = None
 
+    async def health_check(self) -> bool:
+        if await self.is_available():
+            return True
+        return await self._fallback.health_check()
+
     async def initialize_schema(self) -> None:
         """Create constraints and indexes in Neo4j."""
         if not self._driver:

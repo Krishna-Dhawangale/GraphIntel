@@ -65,6 +65,9 @@ class InMemoryGraphStore(GraphStore):
     async def initialize_schema(self) -> None:
         pass
 
+    async def health_check(self) -> bool:
+        return True
+
     async def upsert_entity(self, user_id: str, entity: EntityCreate) -> EntityResponse:
         async with self._lock:
             self._ensure_user_store(user_id)
