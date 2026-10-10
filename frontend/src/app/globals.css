@@ -43,6 +43,20 @@
 }
 
 /* ============================================
+   MOBILE SAFE AREA & BOTTOM NAV
+   ============================================ */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Push page content above the fixed mobile bottom nav */
+@media (max-width: 1023px) {
+  main {
+    padding-bottom: 4.5rem; /* ~72px — height of bottom nav */
+  }
+}
+
+/* ============================================
    GLASSMORPHISM
    ============================================ */
 .glass-panel {
@@ -360,70 +374,119 @@ html.light {
 
 html.light body {
   background-color: #f8fafc;
+  background-image: 
+    radial-gradient(at 15% 15%, rgba(16, 185, 129, 0.08) 0px, transparent 45%),
+    radial-gradient(at 85% 12%, rgba(6, 182, 212, 0.08) 0px, transparent 45%),
+    radial-gradient(at 50% 85%, rgba(99, 102, 241, 0.05) 0px, transparent 55%),
+    radial-gradient(at 90% 80%, rgba(245, 158, 11, 0.04) 0px, transparent 40%);
+  background-attachment: fixed;
   color: #0f172a;
 }
 
-/* Glassmorphism in Light Mode */
+/* Selection Color in Light Mode */
+html.light ::selection {
+  background: rgba(16, 185, 129, 0.2);
+  color: #064e3b;
+}
+
+/* ============================================
+   NAVBAR & HEADER IN LIGHT MODE
+   ============================================ */
+html.light header.glass-panel {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9) !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04) !important;
+  position: sticky;
+}
+
+/* Vibrant 2px gradient line across top of header */
+html.light header.glass-panel::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #10b981 0%, #06b6d4 50%, #6366f1 100%);
+  pointer-events: none;
+}
+
+/* ============================================
+   SIDEBAR IN LIGHT MODE
+   ============================================ */
+html.light aside {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) !important;
+  border-right: 1px solid #e2e8f0 !important;
+  box-shadow: 2px 0 12px rgba(15, 23, 42, 0.02) !important;
+}
+
+html.light aside .text-slate-500 {
+  color: #475569 !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em;
+}
+
+/* Active navigation item in sidebar */
+html.light aside nav a.bg-emerald-500\/10,
+html.light nav a.bg-emerald-500\/10 {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(6, 182, 212, 0.08)) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  color: #047857 !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.1) !important;
+}
+
+html.light aside nav a:hover:not(.bg-emerald-500\/10) {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+/* Sidebar Architecture section colored tags */
+html.light aside .border-b.border-border\/30,
+html.light aside .border-border\/30 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Sidebar Security Isolation Card Tint in Light Mode */
+html.light aside .bg-slate-900\/80 {
+  background: linear-gradient(135deg, rgba(236, 253, 245, 0.75) 0%, rgba(240, 253, 250, 0.75) 100%) !important;
+  border-color: rgba(16, 185, 129, 0.25) !important;
+}
+
+/* Mobile Bottom Navigation Bar */
+html.light nav.fixed.bottom-0 {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-top: 1px solid #e2e8f0 !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* ============================================
+   GLASSMORPHISM PANELS & CARDS IN LIGHT MODE
+   ============================================ */
 html.light .glass-panel {
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.9) !important;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(226, 232, 240, 0.9) !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.02) !important;
 }
 
 html.light .glass-card {
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(226, 232, 240, 0.85);
-  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(226, 232, 240, 0.9) !important;
+  box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.04) !important;
 }
 
 html.light .glass-card:hover {
-  border-color: rgba(16, 185, 129, 0.4);
-  background: #ffffff;
-  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.08);
+  border-color: rgba(16, 185, 129, 0.5) !important;
+  background: #ffffff !important;
+  box-shadow: 0 10px 25px -4px rgba(16, 185, 129, 0.12), 0 4px 6px -2px rgba(0, 0, 0, 0.03) !important;
 }
 
-/* Light Mode Skeleton */
-html.light .skeleton {
-  background: linear-gradient(
-    90deg,
-    rgba(226, 232, 240, 0.8) 25%,
-    rgba(241, 245, 249, 0.9) 50%,
-    rgba(226, 232, 240, 0.8) 75%
-  );
-  background-size: 200% 100%;
-}
-
-/* Light Mode Toast */
-html.light .toast {
-  background: #ffffff;
-  color: #0f172a;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-}
-
-html.light .toast-success {
-  border-color: rgba(16, 185, 129, 0.4);
-  color: #065f46;
-}
-
-html.light .toast-error {
-  border-color: rgba(244, 63, 94, 0.4);
-  color: #9f1239;
-}
-
-html.light .toast-info {
-  border-color: rgba(6, 182, 212, 0.4);
-  color: #155e75;
-}
-
-html.light .toast-warning {
-  border-color: rgba(245, 158, 11, 0.4);
-  color: #92400e;
-}
-
-/* Text Adaptations in Light Mode */
+/* ============================================
+   VIBRANT JEWEL TONES (TEXT CONTRAST)
+   ============================================ */
 html.light .text-white {
   color: #0f172a !important;
 }
@@ -444,28 +507,219 @@ html.light .text-slate-400 {
   color: #64748b !important;
 }
 
-/* Surfaces and Panels in Light Mode */
+/* Rich, high-contrast jewel accents */
+html.light .text-emerald-400,
+html.light .text-emerald-300 {
+  color: #059669 !important;
+  font-weight: 600;
+}
+
+html.light .text-cyan-400,
+html.light .text-cyan-300 {
+  color: #0284c7 !important;
+  font-weight: 600;
+}
+
+html.light .text-purple-400,
+html.light .text-purple-300 {
+  color: #7c3aed !important;
+  font-weight: 600;
+}
+
+html.light .text-blue-400,
+html.light .text-blue-300 {
+  color: #2563eb !important;
+  font-weight: 600;
+}
+
+html.light .text-amber-400,
+html.light .text-amber-300 {
+  color: #d97706 !important;
+  font-weight: 600;
+}
+
+html.light .text-rose-400,
+html.light .text-rose-300 {
+  color: #e11d48 !important;
+  font-weight: 600;
+}
+
+html.light .text-indigo-400,
+html.light .text-indigo-300 {
+  color: #4f46e5 !important;
+  font-weight: 600;
+}
+
+/* ============================================
+   PASTEL PILL CHIPS & BADGES IN LIGHT MODE
+   ============================================ */
+/* Emerald Badges */
+html.light .bg-emerald-500\/10,
+html.light .bg-emerald-500\/15,
+html.light .bg-emerald-500\/20 {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #047857 !important;
+}
+
+/* Cyan Badges */
+html.light .bg-cyan-500\/10,
+html.light .bg-cyan-500\/15,
+html.light .bg-cyan-500\/20 {
+  background-color: #f0fdfa !important;
+  border-color: #99f6e4 !important;
+  color: #0e7490 !important;
+}
+
+/* Purple Badges */
+html.light .bg-purple-500\/10,
+html.light .bg-purple-500\/15,
+html.light .bg-purple-500\/20 {
+  background-color: #f5f3ff !important;
+  border-color: #ddd6fe !important;
+  color: #6d28d9 !important;
+}
+
+/* Blue Badges */
+html.light .bg-blue-500\/10,
+html.light .bg-blue-500\/15,
+html.light .bg-blue-500\/20 {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #1d4ed8 !important;
+}
+
+/* Amber Badges */
+html.light .bg-amber-500\/10,
+html.light .bg-amber-500\/15,
+html.light .bg-amber-500\/20 {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #b45309 !important;
+}
+
+/* Rose Badges */
+html.light .bg-rose-500\/10,
+html.light .bg-rose-500\/15,
+html.light .bg-rose-500\/20,
+html.light .bg-rose-950\/40 {
+  background-color: #fff1f2 !important;
+  border-color: #fecdd3 !important;
+  color: #be123c !important;
+}
+
+/* Indigo Badges */
+html.light .bg-indigo-500\/10,
+html.light .bg-indigo-500\/15,
+html.light .bg-indigo-500\/20 {
+  background-color: #eef2ff !important;
+  border-color: #c7d2fe !important;
+  color: #4338ca !important;
+}
+
+/* ============================================
+   BUTTONS IN LIGHT MODE
+   ============================================ */
+/* Primary Action Button (Gradient Emerald with White Text & Glow) */
+html.light .bg-emerald-500 {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.35) !important;
+  border: 1px solid rgba(5, 150, 105, 0.2) !important;
+}
+
+html.light .bg-emerald-500:hover,
+html.light .hover\:bg-emerald-400:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  box-shadow: 0 6px 20px 0 rgba(16, 185, 129, 0.45) !important;
+  color: #ffffff !important;
+}
+
+/* Secondary Button Adaptations */
+html.light button.bg-slate-900,
+html.light button.bg-slate-900\/80,
+html.light button.bg-slate-900\/60,
+html.light a.bg-slate-900,
+html.light a.bg-slate-900\/80,
+html.light a.bg-slate-900\/60 {
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
+}
+
+html.light button.bg-slate-900:hover,
+html.light button.bg-slate-900\/80:hover,
+html.light a.bg-slate-900:hover,
+html.light a.bg-slate-900\/80:hover {
+  background-color: #f8fafc !important;
+  border-color: #10b981 !important;
+  color: #059669 !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.12) !important;
+}
+
+/* ============================================
+   SURFACES & BACKGROUNDS IN LIGHT MODE
+   ============================================ */
 html.light .bg-\[\#090d16\],
 html.light .bg-\[\#0b101d\],
 html.light .bg-slate-950,
-html.light .bg-slate-950\/90,
-html.light .bg-slate-950\/80,
+html.light [class*="bg-slate-950"],
 html.light .bg-slate-900,
-html.light .bg-slate-900\/90,
+html.light [class*="bg-slate-900"],
+html.light .bg-slate-900\/40,
+html.light .bg-slate-900\/50,
+html.light .bg-slate-900\/60,
+html.light .bg-slate-900\/70,
 html.light .bg-slate-900\/80,
-html.light .bg-slate-900\/60 {
+html.light .bg-slate-900\/90,
+html.light .bg-slate-950\/40,
+html.light .bg-slate-950\/50,
+html.light .bg-slate-950\/60,
+html.light .bg-slate-950\/70,
+html.light .bg-slate-950\/80,
+html.light .bg-slate-950\/90 {
   background-color: #ffffff !important;
 }
 
+/* Inner card/panel sub-surfaces in light mode: clean crisp soft slate instead of dark black shade */
+html.light .glass-panel [class*="bg-slate-950"],
+html.light .glass-panel [class*="bg-slate-900"],
+html.light .glass-card [class*="bg-slate-950"],
+html.light .glass-card [class*="bg-slate-900"],
+html.light .glass-panel .bg-slate-900\/40,
+html.light .glass-panel .bg-slate-900\/60,
+html.light .glass-card .bg-slate-900\/40,
+html.light .glass-card .bg-slate-900\/60 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Hover effects for rows & cards in light mode: gentle slate tint, never dark */
+html.light .glass-panel [class*="bg-slate-950"]:hover,
+html.light .glass-panel [class*="bg-slate-900"]:hover,
+html.light .glass-card [class*="bg-slate-950"]:hover,
+html.light .glass-card [class*="bg-slate-900"]:hover,
+html.light [class*="hover:bg-slate-900"]:hover,
+html.light [class*="hover:bg-slate-950"]:hover,
+html.light .hover\:bg-slate-900:hover,
+html.light .hover\:bg-slate-950:hover {
+  background-color: #f1f5f9 !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}
+
 html.light .bg-slate-800,
+html.light [class*="bg-slate-800"],
 html.light .bg-slate-800\/80,
 html.light .bg-slate-800\/60,
 html.light .bg-slate-800\/50,
 html.light .bg-slate-800\/40 {
   background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
 }
 
 html.light .hover\:bg-slate-800:hover,
+html.light [class*="hover:bg-slate-800"]:hover,
 html.light .hover\:bg-slate-800\/80:hover,
 html.light .hover\:bg-slate-800\/60:hover {
   background-color: #e2e8f0 !important;
@@ -473,8 +727,10 @@ html.light .hover\:bg-slate-800\/60:hover {
 
 /* Borders in Light Mode */
 html.light .border-border,
+html.light [class*="border-border"],
 html.light .border-slate-800,
 html.light .border-slate-700,
+html.light [class*="border-slate-"],
 html.light .border-slate-700\/70,
 html.light .border-slate-800\/70,
 html.light .border-slate-800\/60,
@@ -484,13 +740,50 @@ html.light .border-border\/30 {
   border-color: #e2e8f0 !important;
 }
 
-/* Form Inputs in Light Mode */
+html.light .hover\:border-slate-700:hover,
+html.light [class*="hover:border-slate"]:hover {
+  border-color: #cbd5e1 !important;
+}
+
+/* ============================================
+   HERO GRADIENTS & AMBIENT GLOWS
+   ============================================ */
+html.light .bg-clip-text {
+  background-image: linear-gradient(135deg, #047857 0%, #0d9488 50%, #0284c7 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+html.light .bg-gradient-to-tr.from-emerald-500\/15.via-cyan-500\/20.to-transparent {
+  background-image: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, rgba(6, 182, 212, 0.1) 50%, transparent 80%) !important;
+}
+
+html.light .bg-purple-500\/10 {
+  background-color: rgba(168, 85, 247, 0.08) !important;
+}
+
+html.light .bg-cyan-500\/10 {
+  background-color: rgba(6, 182, 212, 0.08) !important;
+}
+
+/* ============================================
+   FORM INPUTS IN LIGHT MODE
+   ============================================ */
 html.light input:not([type="checkbox"]):not([type="radio"]),
 html.light textarea,
 html.light select {
   background-color: #ffffff !important;
   color: #0f172a !important;
-  border-color: #cbd5e1 !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+}
+
+html.light input:focus-visible,
+html.light textarea:focus-visible,
+html.light select:focus-visible {
+  border-color: #10b981 !important;
+  outline: 2px solid rgba(16, 185, 129, 0.25) !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
 }
 
 html.light input::placeholder,
@@ -498,13 +791,87 @@ html.light textarea::placeholder {
   color: #94a3b8 !important;
 }
 
-/* Sidebar in Light Mode */
-html.light aside {
-  background-color: #f8fafc !important;
+/* ============================================
+   CHAT MESSAGES & PRESETS IN LIGHT MODE
+   ============================================ */
+/* AI Chat Bubble in Light Mode */
+html.light .glass-panel.rounded-tl-none {
+  background: #ffffff !important;
   border-color: #e2e8f0 !important;
+  color: #1e293b !important;
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.06) !important;
 }
 
-/* Code blocks in Light Mode */
+/* User Chat Bubble in Light Mode */
+html.light .bg-emerald-500.rounded-tr-none {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3) !important;
+}
+
+/* ============================================
+   GRAPH CANVAS & DATA TABLES IN LIGHT MODE
+   ============================================ */
+html.light svg {
+  background-image: radial-gradient(#e2e8f0 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+}
+
+html.light table thead tr {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+}
+
+html.light table tbody tr:hover {
+  background-color: rgba(16, 185, 129, 0.04) !important;
+}
+
+/* ============================================
+   LIGHT MODE SKELETON & TOAST NOTIFICATIONS
+   ============================================ */
+html.light .skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(226, 232, 240, 0.8) 25%,
+    rgba(241, 245, 249, 0.9) 50%,
+    rgba(226, 232, 240, 0.8) 75%
+  );
+  background-size: 200% 100%;
+}
+
+html.light .toast {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light .toast-success {
+  border-left: 4px solid #10b981 !important;
+  border-color: #a7f3d0 !important;
+  color: #065f46 !important;
+}
+
+html.light .toast-error {
+  border-left: 4px solid #ef4444 !important;
+  border-color: #fecdd3 !important;
+  color: #9f1239 !important;
+}
+
+html.light .toast-info {
+  border-left: 4px solid #06b6d4 !important;
+  border-color: #bae6fd !important;
+  color: #0e7490 !important;
+}
+
+html.light .toast-warning {
+  border-left: 4px solid #f59e0b !important;
+  border-color: #fde68a !important;
+  color: #92400e !important;
+}
+
+/* ============================================
+   CODE BLOCKS & SCROLLBAR IN LIGHT MODE
+   ============================================ */
 html.light .prose-dark {
   color: #334155 !important;
 }
@@ -518,6 +885,14 @@ html.light .prose-dark code {
 html.light .prose-dark pre {
   background: #f8fafc !important;
   border-color: #e2e8f0 !important;
+}
+
+html.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 /* ============================================
