@@ -28,11 +28,11 @@ services:
           name: graphintel-db
           property: connectionString
       - key: BACKEND_CORS_ORIGINS
-        value: '["https://your-vercel-project.vercel.app"]'
+        value: '["*"]'
       - key: ALLOWED_HOSTS
         value: '["*"]'
       - key: FRONTEND_URL
-        value: https://your-vercel-project.vercel.app
+        value: https://graphintel-api-mrbj.onrender.com
       - key: STORAGE_PROVIDER
         value: local
       - key: VECTOR_STORE_PROVIDER
