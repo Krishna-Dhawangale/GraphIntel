@@ -72,10 +72,14 @@ if settings.ALLOWED_HOSTS and "*" not in settings.ALLOWED_HOSTS:
     app.add_middleware(ExemptHealthTrustedHostMiddleware, allowed_hosts=effective_allowed_hosts)
 
 # CORS Middleware
+effective_cors_origins = list(settings.BACKEND_CORS_ORIGINS)
+if "*" not in effective_cors_origins:
+    effective_cors_origins.append("*")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
-    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_origins=effective_cors_origins,
+    allow_origin_regex=r".*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
