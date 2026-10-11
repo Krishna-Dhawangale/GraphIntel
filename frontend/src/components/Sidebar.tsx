@@ -109,7 +109,7 @@ export default function Sidebar() {
             Tenant-isolated vector retrieval with strict prompt injection boundaries.
           </p>
           <a
-            href="http://localhost:8000/api/v1/docs"
+            href="https://graphintel-api-mrbj.onrender.com/api/v1/docs"
             target="_blank"
             rel="noreferrer"
             className="mt-2.5 inline-flex items-center space-x-1 text-cyan-400 hover:underline"

@@ -10,7 +10,19 @@ import {
   User,
 } from "../types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const DEFAULT_API_BASE =
+  process.env.NODE_ENV === "production"
+    ? "https://graphintel-api-mrbj.onrender.com/api/v1"
+    : "http://localhost:8000/api/v1";
+
+const configuredApiBase = process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_BASE;
+
+// Auto-correct outdated Render subdomain without the random suffix
+export const API_BASE = configuredApiBase.replace(
+  "https://graphintel-api.onrender.com",
+  "https://graphintel-api-mrbj.onrender.com"
+);
+export const API_DOCS_URL = `${API_BASE}/docs`;
 
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];

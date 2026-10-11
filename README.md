@@ -253,7 +253,7 @@ The repository includes a Render Blueprint at [`render.yaml`](./render.yaml). It
 
 1. Import the same GitHub repository into Vercel.
 2. Set the **Root Directory** to `frontend` and leave the detected Next.js build settings at their defaults.
-3. Add the environment variable `NEXT_PUBLIC_API_URL` with the Render API URL, including the API prefix: `https://graphintel-api.onrender.com/api/v1`.
+3. Add the environment variable `NEXT_PUBLIC_API_URL` with your Render API URL, including the API prefix: `https://graphintel-api-mrbj.onrender.com/api/v1`.
 4. Deploy. If Vercel assigns a different production domain, update `BACKEND_CORS_ORIGINS` and `FRONTEND_URL` in Render and redeploy/restart the API.
 
 ### Production feature configuration

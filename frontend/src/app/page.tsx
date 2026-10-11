@@ -813,7 +813,7 @@ export default function Home() {
           <Link href="/chat" className="hover:text-white transition">Research</Link>
           <Link href="/reports" className="hover:text-white transition">Reports</Link>
           <a
-            href="http://localhost:8000/api/v1/docs"
+            href="https://graphintel-api-mrbj.onrender.com/api/v1/docs"
             target="_blank"
             rel="noreferrer"
             className="text-cyan-400 hover:underline inline-flex items-center space-x-1"
