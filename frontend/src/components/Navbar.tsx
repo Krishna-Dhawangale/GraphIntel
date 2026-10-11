@@ -14,6 +14,7 @@ import { api } from "../lib/api";
 import { removeToken } from "../lib/auth";
 import { User } from "../types";
 import { toast } from "../lib/toast";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Navbar() {
   const router = useRouter();
@@ -126,6 +127,12 @@ export default function Navbar() {
           <span className="text-[11px] font-medium whitespace-nowrap">{healthy ? "Operational" : "Degraded"}</span>
         </div>
 
+        {/* Theme Toggle — visible before login/register, removed once logged in */}
+        {!user && (
+          <div className="hidden sm:block">
+            <ThemeToggle />
+          </div>
+        )}
 
         {/* User section */}
         {user ? (

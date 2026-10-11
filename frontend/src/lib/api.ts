@@ -62,7 +62,12 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   }
 
   // Attempt automatic refresh on 401
-  if (response.status === 401 && !endpoint.includes("/auth/login") && !endpoint.includes("/auth/refresh")) {
+  if (
+    response.status === 401 &&
+    !endpoint.includes("/auth/login") &&
+    !endpoint.includes("/auth/refresh") &&
+    !endpoint.includes("/auth/me")
+  ) {
     const refreshToken = getRefreshToken();
     if (refreshToken && !isRefreshing) {
       isRefreshing = true;
@@ -80,8 +85,15 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
           response = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
         } else {
           removeToken();
-          if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
-            window.location.href = "/login";
+          const isPublic =
+            typeof window !== "undefined" &&
+            (window.location.pathname === "/" ||
+              window.location.pathname.startsWith("/login") ||
+              window.location.pathname.startsWith("/register") ||
+              window.location.pathname.startsWith("/forgot-password") ||
+              window.location.pathname.startsWith("/reset-password"));
+          if (typeof window !== "undefined" && !isPublic) {
+            window.location.href = `/login?next=${encodeURIComponent(window.location.pathname)}`;
           }
         }
       } catch (_) {
@@ -90,9 +102,16 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
         isRefreshing = false;
       }
     } else if (!refreshToken) {
-      if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
-        removeToken();
-        window.location.href = "/login";
+      removeToken();
+      const isPublic =
+        typeof window !== "undefined" &&
+        (window.location.pathname === "/" ||
+          window.location.pathname.startsWith("/login") ||
+          window.location.pathname.startsWith("/register") ||
+          window.location.pathname.startsWith("/forgot-password") ||
+          window.location.pathname.startsWith("/reset-password"));
+      if (typeof window !== "undefined" && !isPublic) {
+        window.location.href = `/login?next=${encodeURIComponent(window.location.pathname)}`;
       }
     }
   }
@@ -142,7 +161,12 @@ export const api = {
         body: JSON.stringify({ refresh_token: refreshToken }),
       });
     },
-    me: () => request<User>("/auth/me"),
+    me: () => {
+      if (!getToken()) {
+        return Promise.reject(new Error("No token"));
+      }
+      return request<User>("/auth/me");
+    },
     forgotPassword: (email: string) =>
       request<{ message: string }>("/auth/forgot-password", {
         method: "POST",
