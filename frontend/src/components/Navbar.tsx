@@ -14,7 +14,6 @@ import { api } from "../lib/api";
 import { removeToken } from "../lib/auth";
 import { User } from "../types";
 import { toast } from "../lib/toast";
-import ThemeToggle from "./ThemeToggle";
 
 export default function Navbar() {
   const router = useRouter();
@@ -28,13 +27,13 @@ export default function Navbar() {
     api.auth
       .me()
       .then((data) => setUser(data))
-      .catch(() => {});
+      .catch(() => setUser(null));
 
     api.health
       .check()
       .then((res) => setHealthy(res.status === "healthy"))
       .catch(() => setHealthy(false));
-  }, []);
+  }, [pathname]);
 
   // Close mobile search on route change
   useEffect(() => {
@@ -46,6 +45,7 @@ export default function Navbar() {
       await api.auth.logout();
     } catch (_) {}
     removeToken();
+    setUser(null);
     toast.success("Signed out successfully.", { duration: 2000 });
     setTimeout(() => router.push("/login"), 200);
   };
@@ -126,10 +126,6 @@ export default function Navbar() {
           <span className="text-[11px] font-medium whitespace-nowrap">{healthy ? "Operational" : "Degraded"}</span>
         </div>
 
-        {/* Theme Toggle — hidden on mobile */}
-        <div className="hidden sm:block">
-          <ThemeToggle />
-        </div>
 
         {/* User section */}
         {user ? (
