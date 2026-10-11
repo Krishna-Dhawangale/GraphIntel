@@ -646,51 +646,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ================= TECH STACK SHOWCASE ================= */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-10 relative z-10">
-        <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-border text-center space-y-6">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono">
-            Engineered with Modern Enterprise Cloud Infrastructure
-          </h3>
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-xs sm:text-sm font-mono text-slate-300">
-            <div className="px-3.5 py-1.5 rounded-lg bg-slate-900 border border-border flex items-center space-x-2">
-              <span className="text-emerald-400 font-bold">FastAPI</span>
-              <span className="text-slate-500">•</span>
-              <span>Python 3.11</span>
-            </div>
-            <div className="px-3.5 py-1.5 rounded-lg bg-slate-900 border border-border flex items-center space-x-2">
-              <span className="text-cyan-400 font-bold">Neo4j</span>
-              <span className="text-slate-500">•</span>
-              <span>Cypher KG</span>
-            </div>
-            <div className="px-3.5 py-1.5 rounded-lg bg-slate-900 border border-border flex items-center space-x-2">
-              <span className="text-purple-400 font-bold">Qdrant</span>
-              <span className="text-slate-500">•</span>
-              <span>Dense Vector</span>
-            </div>
-            <div className="px-3.5 py-1.5 rounded-lg bg-slate-900 border border-border flex items-center space-x-2">
-              <span className="text-rose-400 font-bold">Redis</span>
-              <span className="text-slate-500">•</span>
-              <span>Semantic Cache</span>
-            </div>
-            <div className="px-3.5 py-1.5 rounded-lg bg-slate-900 border border-border flex items-center space-x-2">
-              <span className="text-blue-400 font-bold">PostgreSQL</span>
-              <span className="text-slate-500">•</span>
-              <span>Async ORM</span>
-            </div>
-            <div className="px-3.5 py-1.5 rounded-lg bg-slate-900 border border-border flex items-center space-x-2">
-              <span className="text-emerald-400 font-bold">LangGraph</span>
-              <span className="text-slate-500">•</span>
-              <span>Agentic Planner</span>
-            </div>
-            <div className="px-3.5 py-1.5 rounded-lg bg-slate-900 border border-border flex items-center space-x-2">
-              <span className="text-white font-bold">Next.js 14</span>
-              <span className="text-slate-500">•</span>
-              <span>React 18</span>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* ================= INTERACTIVE FAQ SECTION ================= */}
       <section id="faq" className="max-w-4xl mx-auto px-4 sm:px-6 py-12 relative z-10 space-y-6 scroll-mt-20">
