@@ -25,7 +25,10 @@ export default function LoginPage() {
       const res = await api.auth.login({ email, password });
       setTokens(res.access_token, res.refresh_token);
       toast.success("Welcome back! Redirecting to dashboard...", { duration: 2000 });
-      setTimeout(() => router.push("/dashboard"), 300);
+      const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+      const nextParam = searchParams?.get("next");
+      const target = nextParam && nextParam !== "/" ? nextParam : "/dashboard";
+      setTimeout(() => router.push(target), 300);
     } catch (err: any) {
       const msg = err.message || "Failed to sign in. Please verify your credentials.";
       setError(msg);
@@ -38,11 +41,19 @@ export default function LoginPage() {
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md space-y-6">
-        {/* Logo and Header */}
+        {/* Back Link & Logo */}
         <div className="text-center space-y-3">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 text-emerald-400 mx-auto flex items-center justify-center shadow-lg shadow-emerald-500/10">
-            <ShieldCheck className="w-7 h-7" />
-          </div>
+          <Link
+            href="/"
+            className="inline-flex items-center space-x-1.5 text-xs text-slate-400 hover:text-emerald-400 transition"
+          >
+            <span>← Back to Home</span>
+          </Link>
+          <Link href="/" className="inline-block group">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 text-emerald-400 mx-auto flex items-center justify-center shadow-lg shadow-emerald-500/10 group-hover:scale-105 transition-transform">
+              <ShieldCheck className="w-7 h-7" />
+            </div>
+          </Link>
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-white">Sign In to GraphIntel</h1>
             <p className="text-sm text-slate-400 mt-1">Access your market intelligence research environment</p>

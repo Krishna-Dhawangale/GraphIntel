@@ -47,11 +47,19 @@ export default function RegisterPage() {
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md space-y-6">
-        {/* Header */}
+        {/* Header & Back Link */}
         <div className="text-center space-y-3">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 text-emerald-400 mx-auto flex items-center justify-center shadow-lg shadow-emerald-500/10">
-            <Shield className="w-7 h-7" />
-          </div>
+          <Link
+            href="/"
+            className="inline-flex items-center space-x-1.5 text-xs text-slate-400 hover:text-emerald-400 transition"
+          >
+            <span>← Back to Home</span>
+          </Link>
+          <Link href="/" className="inline-block group">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 text-emerald-400 mx-auto flex items-center justify-center shadow-lg shadow-emerald-500/10 group-hover:scale-105 transition-transform">
+              <Shield className="w-7 h-7" />
+            </div>
+          </Link>
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-white">Create an Account</h1>
             <p className="text-sm text-slate-400 mt-1">Deploy your intelligence workspace with tenant data isolation</p>

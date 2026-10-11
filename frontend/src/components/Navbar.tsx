@@ -60,9 +60,9 @@ export default function Navbar() {
 
   return (
     <header className="relative h-16 border-b border-border glass-panel sticky top-0 z-40 px-3 sm:px-6 flex items-center justify-between">
-      {/* Left: Logo + Desktop Search */}
+      {/* Left: Logo + Desktop Links / Search */}
       <div className="flex items-center gap-3 sm:gap-6 min-w-0">
-        <Link href="/dashboard" className="flex items-center gap-2 group shrink-0">
+        <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-2 group shrink-0">
           <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform shrink-0">
             <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-black" />
           </div>
@@ -74,29 +74,51 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* Global Search Bar (Desktop only) */}
-        <form onSubmit={handleSearchSubmit} className="hidden md:flex items-center relative">
-          <Search className="w-4 h-4 text-slate-500 absolute left-3 pointer-events-none" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search entities, filings, intelligence..."
-            className="pl-9 pr-4 py-1.5 rounded-lg bg-slate-900/80 border border-border text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 w-52 lg:w-80 transition"
-          />
-        </form>
+        {/* Global Search Bar (Shown when authenticated or on dashboard routes) */}
+        {user ? (
+          <form onSubmit={handleSearchSubmit} className="hidden md:flex items-center relative">
+            <Search className="w-4 h-4 text-slate-500 absolute left-3 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search entities, filings, intelligence..."
+              className="pl-9 pr-4 py-1.5 rounded-lg bg-slate-900/80 border border-border text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 w-52 lg:w-80 transition"
+            />
+          </form>
+        ) : (
+          <nav className="hidden lg:flex items-center gap-6 text-xs font-medium text-slate-400 ml-4">
+            <Link href="/#demo" className="hover:text-emerald-400 transition-colors">
+              Workspace Demo
+            </Link>
+            <Link href="/#capabilities" className="hover:text-emerald-400 transition-colors">
+              Capabilities
+            </Link>
+            <Link href="/#workflow" className="hover:text-emerald-400 transition-colors">
+              How It Works
+            </Link>
+            <Link href="/#comparison" className="hover:text-emerald-400 transition-colors">
+              Comparison
+            </Link>
+            <Link href="/#faq" className="hover:text-emerald-400 transition-colors">
+              FAQ
+            </Link>
+          </nav>
+        )}
       </div>
 
       {/* Right: Actions */}
       <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-        {/* Mobile Search Toggle */}
-        <button
-          onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
-          className="md:hidden p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
-          aria-label="Toggle search"
-        >
-          <Search className="w-4 h-4" />
-        </button>
+        {/* Mobile Search Toggle (when logged in) */}
+        {user && (
+          <button
+            onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+            className="md:hidden p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
+            aria-label="Toggle search"
+          >
+            <Search className="w-4 h-4" />
+          </button>
+        )}
 
         {/* System Health Badge — hidden on mobile */}
         <div className="hidden sm:flex items-center gap-2 text-xs text-slate-400 bg-slate-900/60 px-3 py-1.5 rounded-full border border-border">
@@ -104,14 +126,21 @@ export default function Navbar() {
           <span className="text-[11px] font-medium whitespace-nowrap">{healthy ? "Operational" : "Degraded"}</span>
         </div>
 
-        {/* Theme Toggle — hidden on mobile (available in bottom nav via Sidebar) */}
+        {/* Theme Toggle — hidden on mobile */}
         <div className="hidden sm:block">
           <ThemeToggle />
         </div>
 
         {/* User section */}
         {user ? (
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-3">
+            <Link
+              href="/dashboard"
+              className="text-xs font-medium text-slate-200 hover:text-white bg-slate-800/80 hover:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700/80 transition"
+            >
+              Dashboard
+            </Link>
+
             {/* Avatar */}
             <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 border border-slate-700 shrink-0">
               <UserIcon className="w-4 h-4 text-emerald-400" />
@@ -145,18 +174,18 @@ export default function Navbar() {
             </button>
           </div>
         ) : (
-          <div className="flex items-center gap-1.5 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
             <Link
               href="/login"
-              className="text-xs sm:text-sm text-slate-300 hover:text-white px-2.5 sm:px-3 py-1.5 rounded-md hover:bg-slate-800 transition whitespace-nowrap"
+              className="text-xs sm:text-sm font-medium text-slate-300 hover:text-white px-3 py-1.5 rounded-lg hover:bg-slate-800/80 border border-transparent hover:border-slate-700 transition whitespace-nowrap"
             >
               Sign In
             </Link>
             <Link
               href="/register"
-              className="text-xs sm:text-sm font-medium bg-emerald-500 hover:bg-emerald-400 text-black px-3 py-1.5 rounded-md shadow transition whitespace-nowrap"
+              className="text-xs sm:text-sm font-semibold bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-3.5 py-1.5 rounded-lg shadow-lg shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 whitespace-nowrap"
             >
-              Register
+              <span>Get Started</span>
             </Link>
           </div>
         )}

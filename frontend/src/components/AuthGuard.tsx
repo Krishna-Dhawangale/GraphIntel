@@ -5,10 +5,11 @@ import { usePathname, useRouter } from "next/navigation";
 import { isAuthenticated } from "../lib/auth";
 
 // Pages that don't require authentication
-const PUBLIC_PATHS = ["/login", "/register", "/forgot-password", "/reset-password"];
+const PUBLIC_PATHS = ["/", "/login", "/register", "/forgot-password", "/reset-password"];
 
 function isPublicPath(pathname: string): boolean {
-  return PUBLIC_PATHS.some(
+  if (pathname === "/") return true;
+  return PUBLIC_PATHS.filter((p) => p !== "/").some(
     (p) => pathname === p || pathname.startsWith(p + "/")
   );
 }
