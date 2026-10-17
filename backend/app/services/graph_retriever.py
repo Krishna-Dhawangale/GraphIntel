@@ -117,6 +117,14 @@ class GraphRetriever:
 
 
                 for p in paths:
+                    # Require at least 2 hops for multi-hop reasoning
+                    if p.get("length", 0) < 2:
+                        continue
+                    nodes = p.get("nodes", [])
+                    # Reject cycles or duplicate nodes
+                    if len(nodes) != len(set(nodes)):
+                        continue
+
                     evidence_docs = [
                         e.get("source_document_id") for e in p.get("edges", []) if e.get("source_document_id")
                     ]
@@ -138,7 +146,7 @@ class GraphRetriever:
                     evidence_items.append(
                         EvidenceItem(
                             type="graph",
-                            content=f"Knowledge Graph Multi-Hop Path: {path_desc}",
+                            content=f"Knowledge Graph Multi-Hop Reasoning Path ({p['length']} hops): {path_desc}",
                             entity=p["nodes"][0] if p["nodes"] else None,
                             target=p["nodes"][-1] if p["nodes"] else None,
                             source_document=evidence_docs[0] if evidence_docs else None,

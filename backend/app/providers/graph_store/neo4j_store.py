@@ -243,11 +243,13 @@ class Neo4jGraphStore(GraphStore):
             r.source_document_id = $source_document_id,
             r.source_chunk_id = $source_chunk_id,
             r.source_page = $source_page,
+            r.evidence_quote = $evidence_quote,
             r.valid_from = $valid_from,
             r.valid_to = $valid_to,
             r.created_at = datetime()
         ON MATCH SET
             r.confidence = CASE WHEN $confidence > r.confidence THEN $confidence ELSE r.confidence END,
+            r.evidence_quote = coalesce($evidence_quote, r.evidence_quote),
             r.valid_from = coalesce($valid_from, r.valid_from),
             r.valid_to = coalesce($valid_to, r.valid_to)
         RETURN r, src.name AS src_name, src.type AS src_type, tgt.name AS tgt_name, tgt.type AS tgt_type
@@ -262,6 +264,7 @@ class Neo4jGraphStore(GraphStore):
             "source_document_id": relationship.source_document_id,
             "source_chunk_id": relationship.source_chunk_id or "",
             "source_page": relationship.source_page,
+            "evidence_quote": relationship.evidence_quote or "",
             "valid_from": relationship.valid_from,
             "valid_to": relationship.valid_to,
         }
@@ -283,6 +286,7 @@ class Neo4jGraphStore(GraphStore):
                     source_document_id=r.get("source_document_id"),
                     source_chunk_id=r.get("source_chunk_id"),
                     source_page=r.get("source_page"),
+                    evidence_quote=r.get("evidence_quote"),
                     valid_from=r.get("valid_from"),
                     valid_to=r.get("valid_to"),
                     properties={},
@@ -488,6 +492,7 @@ class Neo4jGraphStore(GraphStore):
                             relationship=rel_type,
                             confidence=float(rel.get("confidence", 1.0)),
                             source_document=rel.get("source_document_id"),
+                            evidence_quote=rel.get("evidence_quote"),
                             valid_from=rel.get("valid_from"),
                             valid_to=rel.get("valid_to"),
                             metadata={},
@@ -649,6 +654,7 @@ class Neo4jGraphStore(GraphStore):
                                 relationship=rec["rel_type"],
                                 confidence=float(r.get("confidence", 1.0)),
                                 source_document=r.get("source_document_id"),
+                                evidence_quote=r.get("evidence_quote"),
                                 valid_from=r.get("valid_from"),
                                 valid_to=r.get("valid_to"),
                                 metadata={},

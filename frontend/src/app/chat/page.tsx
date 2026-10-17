@@ -279,7 +279,9 @@ export default function ChatPage() {
                           <span>•</span>
                           <span>Retr: {msg.response.metadata.retrieval_time_ms}ms</span>
                           <span>•</span>
-                          <span>LLM: {msg.response.metadata.llm_time_ms}ms</span>
+                          <span>
+                            LLM: {msg.response.metadata.cache_hit ? "cached" : `${msg.response.metadata.llm_time_ms}ms`}
+                          </span>
                           <span>•</span>
                           <span>Total: {msg.response.metadata.total_time_ms}ms</span>
                         </div>
@@ -424,14 +426,16 @@ export default function ChatPage() {
                   <span className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold block">
                     Document Title
                   </span>
-                  <span className="text-white font-medium block mt-0.5 break-words">{activeCitation.filename}</span>
+                  <span className="text-white font-medium block mt-0.5 break-words">
+                    {activeCitation.document_title || activeCitation.filename}
+                  </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="p-2.5 rounded-lg bg-slate-900/60 border border-border">
                     <span className="text-[10px] text-slate-500 block">Page Number</span>
                     <span className="text-white font-mono font-bold mt-0.5 block">
-                      {activeCitation.page_number ? `Page ${activeCitation.page_number}` : "N/A"}
+                      {activeCitation.page_number ? `Page ${activeCitation.page_number}` : "Page metadata unavailable"}
                     </span>
                   </div>
                   <div className="p-2.5 rounded-lg bg-slate-900/60 border border-border">
@@ -441,6 +445,17 @@ export default function ChatPage() {
                     </span>
                   </div>
                 </div>
+
+                {activeCitation.claim && (
+                  <div>
+                    <span className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold block">
+                      Claim Supported by Source
+                    </span>
+                    <p className="mt-1 p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[11px] leading-relaxed">
+                      {activeCitation.claim}
+                    </p>
+                  </div>
+                )}
 
                 {activeCitation.section && (
                   <div>
@@ -453,10 +468,10 @@ export default function ChatPage() {
 
                 <div>
                   <span className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold block mb-1">
-                    Extracted Context Text
+                    Supporting Passage Excerpt
                   </span>
                   <p className="p-3 rounded-lg bg-slate-950/80 border border-border/60 text-slate-300 font-mono text-[11px] leading-relaxed whitespace-pre-wrap break-words overflow-x-auto max-h-60 overflow-y-auto">
-                    {activeCitation.text_snippet || "Verified context snippet retrieved from vector chunk index."}
+                    {activeCitation.supporting_excerpt || activeCitation.text_snippet || "Verified context snippet retrieved from vector chunk index."}
                   </p>
                 </div>
               </div>

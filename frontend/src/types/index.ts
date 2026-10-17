@@ -1,5 +1,6 @@
 export type DocumentStatus = "UPLOADED" | "PROCESSING" | "COMPLETED" | "FAILED";
 
+
 export type UserRole = "USER" | "ANALYST" | "ADMIN";
 
 export interface User {
@@ -45,11 +46,14 @@ export interface DocumentChunk {
 export interface SourceCitation {
   document_id: string;
   filename: string;
+  document_title?: string;
   page_number: number | null;
   section: string | null;
   chunk_id: string | null;
   citation_order: number;
   relevance_score: number;
+  supporting_excerpt?: string;
+  claim?: string;
   text_snippet?: string;
 }
 
@@ -126,9 +130,12 @@ export interface QueryMetadata {
   graph_retrieval_time_ms?: number;
   vector_retrieval_time_ms?: number;
   rerank_time_ms?: number;
+  citation_validation_time_ms?: number;
   paths_found?: number;
   graph_nodes_retrieved?: number;
   confidence_score?: number;
+  cache_hit?: boolean;
+  skipped_llm?: boolean;
 }
 
 export interface QueryResponse {

@@ -34,11 +34,15 @@ class QueryRequest(BaseModel):
 class SourceCitation(BaseModel):
     document_id: str
     filename: str
+    document_title: Optional[str] = None
     page_number: Optional[int] = None
     section: Optional[str] = None
     chunk_id: Optional[str] = None
     citation_order: int
     relevance_score: float
+    supporting_excerpt: Optional[str] = None
+    claim: Optional[str] = None
+    text_snippet: Optional[str] = None
 
 
 class RetrievedChunk(BaseModel):
@@ -66,6 +70,7 @@ class EvidenceItem(BaseModel):
     relationship: Optional[str] = None
     target: Optional[str] = None
     source_document: Optional[str] = None
+    chunk_id: Optional[str] = None
     page: Optional[int] = None
     confidence: float = 1.0
     valid_from: Optional[int] = None
@@ -81,12 +86,15 @@ class QueryMetadata(BaseModel):
     graph_retrieval_time_ms: int = 0
     vector_retrieval_time_ms: int = 0
     rerank_time_ms: int = 0
+    citation_validation_time_ms: int = 0
     paths_found: int = 0
     graph_nodes_retrieved: int = 0
     degraded: bool = False
     fallback_reason: Optional[str] = None
     tokens_used: Optional[int] = None
     estimated_cost_usd: Optional[float] = None
+    cache_hit: bool = False
+    skipped_llm: bool = False
 
 
 class QueryResponse(BaseModel):

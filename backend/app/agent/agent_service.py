@@ -21,7 +21,7 @@ class AgentRAGService:
         user_id: str,
         conversation_id: Optional[str] = None,
     ) -> QueryResponse:
-        start_total = time.time()
+        start_total = time.perf_counter()
         clean_q = question.strip()
 
         initial_state: AgentState = {
@@ -57,7 +57,7 @@ class AgentRAGService:
                 "execution_trace": [{"error": str(e)}],
             }
 
-        total_time_ms = int((time.time() - start_total) * 1000)
+        total_time_ms = int((time.perf_counter() - start_total) * 1000)
 
         # Compute timings from execution trace
         trace = final_state.get("execution_trace", [])
@@ -66,6 +66,9 @@ class AgentRAGService:
         )
         llm_ms = sum(
             t.get("latency_ms", 0) for t in trace if t.get("node") == "answer_generator"
+        )
+        cit_val_ms = sum(
+            t.get("latency_ms", 0) for t in trace if t.get("node") == "citation_validator"
         )
 
         citations = final_state.get("citations", [])
@@ -91,7 +94,7 @@ class AgentRAGService:
             source_record = Source(
                 query_id=query_record.id,
                 document_id=cit.document_id,
-                chunk_id=cit.chunk_id,
+                chunk_id=cit.chunk_id or "",
                 relevance_score=cit.relevance_score,
                 citation_order=cit.citation_order,
             )
@@ -120,6 +123,7 @@ class AgentRAGService:
             model_used="langgraph-agentic-v1",
             graph_retrieval_time_ms=retrieval_ms,
             vector_retrieval_time_ms=retrieval_ms,
+            citation_validation_time_ms=cit_val_ms,
             paths_found=len(graph_paths),
             graph_nodes_retrieved=len(resolved_entities),
             tokens_used=total_tokens,

@@ -66,6 +66,7 @@ class RelationshipBase(BaseModel):
     source_document_id: str = Field(..., description="Evidence document ID")
     source_chunk_id: Optional[str] = None
     source_page: Optional[int] = None
+    evidence_quote: Optional[str] = Field(None, description="Verbatim supporting excerpt from source chunk")
     valid_from: Optional[int] = Field(None, description="Starting year or timestamp")
     valid_to: Optional[int] = Field(None, description="Ending year or timestamp")
     properties: Dict[str, Any] = Field(default_factory=dict)
@@ -85,6 +86,21 @@ class RelationshipResponse(RelationshipBase):
     created_at: Optional[datetime] = None
 
 
+class ExtractedTriple(BaseModel):
+    subject_name: str
+    subject_type: str
+    predicate: str
+    object_name: str
+    object_type: str
+    confidence: float = Field(default=0.9, ge=0.0, le=1.0)
+    source_document_id: str
+    source_chunk_id: Optional[str] = None
+    source_page: Optional[int] = None
+    evidence_quote: str
+    valid_from: Optional[int] = None
+    valid_to: Optional[int] = None
+
+
 # Visualization and Neighbor Structures (React Flow / Cytoscape compatible)
 class GraphNode(BaseModel):
     id: str
@@ -100,6 +116,7 @@ class GraphEdge(BaseModel):
     relationship: str
     confidence: float = 1.0
     source_document: Optional[str] = None
+    evidence_quote: Optional[str] = None
     valid_from: Optional[int] = None
     valid_to: Optional[int] = None
     metadata: Dict[str, Any] = Field(default_factory=dict)

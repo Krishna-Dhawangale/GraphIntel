@@ -377,21 +377,38 @@ async def fact_checker_node(state: AgentState) -> Dict[str, Any]:
 
 async def citation_validator_node(state: AgentState) -> Dict[str, Any]:
     """Node 9: Validate citations, ensure source traceability, and map citation metadata."""
-    t0 = time.time()
+    t0 = time.perf_counter()
     vector_results = state.get("vector_results", [])
     answer = state.get("answer", "")
 
+    import os
     citations: List[SourceCitation] = []
+    seen_chunk_ids = set()
+
     for i, chunk in enumerate(vector_results, start=1):
+        if chunk.chunk_id in seen_chunk_ids:
+            continue
+        seen_chunk_ids.add(chunk.chunk_id)
+
+        clean_text = " ".join(chunk.text.split())
+        excerpt = clean_text[:280] + ("..." if len(clean_text) > 280 else "")
+        first_sentence = clean_text.split(".")[0].strip()
+        claim_desc = first_sentence if len(first_sentence) > 15 else clean_text[:100]
+        doc_title = os.path.splitext(chunk.filename)[0]
+
         citations.append(
             SourceCitation(
                 document_id=chunk.document_id,
                 filename=chunk.filename,
+                document_title=doc_title,
                 page_number=chunk.page_number,
                 section=chunk.section,
                 chunk_id=chunk.chunk_id,
                 citation_order=i,
                 relevance_score=chunk.score,
+                supporting_excerpt=excerpt,
+                claim=claim_desc,
+                text_snippet=excerpt,
             )
         )
 
@@ -404,7 +421,7 @@ async def citation_validator_node(state: AgentState) -> Dict[str, Any]:
 
     trace = {
         "node": "citation_validator",
-        "latency_ms": int((time.time() - t0) * 1000),
+        "latency_ms": max(1, int((time.perf_counter() - t0) * 1000)),
         "citations_mapped": len(citations),
     }
 

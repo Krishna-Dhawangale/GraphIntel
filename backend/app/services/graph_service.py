@@ -165,6 +165,7 @@ class GraphService:
                     source_document_id=document_id,
                     source_chunk_id=rel.source_chunk_id,
                     source_page=rel.source_page,
+                    evidence_quote=rel.evidence_quote,
                     valid_from=rel.valid_from,
                     valid_to=rel.valid_to,
                     properties=rel.properties,

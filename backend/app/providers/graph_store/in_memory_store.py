@@ -162,6 +162,8 @@ class InMemoryGraphStore(GraphStore):
             if edge_id in user_edges:
                 edge = user_edges[edge_id]
                 edge["confidence"] = max(edge.get("confidence", 0.0), relationship.confidence)
+                if relationship.evidence_quote:
+                    edge["evidence_quote"] = relationship.evidence_quote
                 if relationship.valid_from is not None:
                     edge["valid_from"] = relationship.valid_from
                 if relationship.valid_to is not None:
@@ -178,6 +180,7 @@ class InMemoryGraphStore(GraphStore):
                     "source_document_id": relationship.source_document_id,
                     "source_chunk_id": relationship.source_chunk_id,
                     "source_page": relationship.source_page,
+                    "evidence_quote": relationship.evidence_quote,
                     "valid_from": relationship.valid_from,
                     "valid_to": relationship.valid_to,
                     "properties": dict(relationship.properties),
@@ -195,6 +198,7 @@ class InMemoryGraphStore(GraphStore):
                 source_document_id=edge["source_document_id"],
                 source_chunk_id=edge.get("source_chunk_id"),
                 source_page=edge.get("source_page"),
+                evidence_quote=edge.get("evidence_quote"),
                 valid_from=edge.get("valid_from"),
                 valid_to=edge.get("valid_to"),
                 properties=edge["properties"],
@@ -285,6 +289,7 @@ class InMemoryGraphStore(GraphStore):
                         source_document_id=edge["source_document_id"],
                         source_chunk_id=edge.get("source_chunk_id"),
                         source_page=edge.get("source_page"),
+                        evidence_quote=edge.get("evidence_quote"),
                         valid_from=edge.get("valid_from"),
                         valid_to=edge.get("valid_to"),
                         properties=edge.get("properties", {}),
@@ -351,6 +356,7 @@ class InMemoryGraphStore(GraphStore):
                             relationship=edge["relationship_type"],
                             confidence=edge["confidence"],
                             source_document=edge.get("source_document_id"),
+                            evidence_quote=edge.get("evidence_quote"),
                             valid_from=edge.get("valid_from"),
                             valid_to=edge.get("valid_to"),
                             metadata=edge.get("properties", {}),
@@ -526,6 +532,7 @@ class InMemoryGraphStore(GraphStore):
                     relationship=e["relationship_type"],
                     confidence=e["confidence"],
                     source_document=e.get("source_document_id"),
+                    evidence_quote=e.get("evidence_quote"),
                     valid_from=e.get("valid_from"),
                     valid_to=e.get("valid_to"),
                     metadata=e.get("properties", {}),
