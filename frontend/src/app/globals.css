@@ -441,17 +441,6 @@ html.light aside nav a:hover:not(.bg-emerald-500\/10) {
   color: #0f172a !important;
 }
 
-/* Sidebar Architecture section colored tags */
-html.light aside .border-b.border-border\/30,
-html.light aside .border-border\/30 {
-  border-color: #e2e8f0 !important;
-}
-
-/* Sidebar Security Isolation Card Tint in Light Mode */
-html.light aside .bg-slate-900\/80 {
-  background: linear-gradient(135deg, rgba(236, 253, 245, 0.75) 0%, rgba(240, 253, 250, 0.75) 100%) !important;
-  border-color: rgba(16, 185, 129, 0.25) !important;
-}
 
 /* Mobile Bottom Navigation Bar */
 html.light nav.fixed.bottom-0 {

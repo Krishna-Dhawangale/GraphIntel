@@ -4,19 +4,13 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { isAuthenticated } from "../lib/auth";
 
-// Pages that guests can access directly without forced login
+// Strict public paths: visitors can only access landing, auth, and recovery pages
 const PUBLIC_PATHS = [
   "/",
   "/login",
   "/register",
   "/forgot-password",
   "/reset-password",
-  "/dashboard",
-  "/chat",
-  "/graph",
-  "/documents",
-  "/conversations",
-  "/reports",
 ];
 
 function isPublicPath(pathname: string): boolean {

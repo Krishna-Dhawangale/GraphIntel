@@ -246,23 +246,33 @@ export default function Home() {
 
         {/* Hero Primary Action CTA Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-4">
-          <Link
-            href="/dashboard"
-            className="w-full sm:w-auto flex items-center justify-center space-x-2.5 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-bold px-7 py-3.5 rounded-xl shadow-xl shadow-emerald-500/25 transition-all hover:scale-105 active:scale-95 group"
-          >
-            <BarChart3 className="w-5 h-5 group-hover:rotate-6 transition-transform" />
-            <span>Go to Intelligence Dashboard</span>
-            <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-          </Link>
-
-          {!isLoggedIn && (
+          {isLoggedIn ? (
             <Link
-              href="/login"
-              className="w-full sm:w-auto flex items-center justify-center space-x-2 bg-slate-900/90 hover:bg-slate-800 text-white font-semibold px-6 py-3.5 rounded-xl border border-slate-700/80 transition shadow hover:border-slate-500 hover:scale-105 active:scale-95"
+              href="/dashboard"
+              className="w-full sm:w-auto flex items-center justify-center space-x-2.5 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-bold px-7 py-3.5 rounded-xl shadow-xl shadow-emerald-500/25 transition-all hover:scale-105 active:scale-95 group"
             >
-              <Lock className="w-4 h-4 text-emerald-400" />
-              <span>Sign In</span>
+              <BarChart3 className="w-5 h-5 group-hover:rotate-6 transition-transform" />
+              <span>Go to Intelligence Dashboard</span>
+              <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
             </Link>
+          ) : (
+            <>
+              <Link
+                href="/register"
+                className="w-full sm:w-auto flex items-center justify-center space-x-2.5 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-bold px-7 py-3.5 rounded-xl shadow-xl shadow-emerald-500/25 transition-all hover:scale-105 active:scale-95 group"
+              >
+                <Zap className="w-5 h-5 group-hover:rotate-6 transition-transform" />
+                <span>Get Started Free</span>
+                <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link
+                href="/login"
+                className="w-full sm:w-auto flex items-center justify-center space-x-2 bg-slate-900/90 hover:bg-slate-800 text-white font-semibold px-6 py-3.5 rounded-xl border border-slate-700/80 transition shadow hover:border-slate-500 hover:scale-105 active:scale-95"
+              >
+                <Lock className="w-4 h-4 text-emerald-400" />
+                <span>Sign In</span>
+              </Link>
+            </>
           )}
 
           <Link
@@ -701,23 +711,33 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2 relative z-10">
-            <Link
-              href="/dashboard"
-              className="w-full sm:w-auto px-8 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl shadow-xl shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95 flex items-center justify-center space-x-2"
-            >
-              <BarChart3 className="w-4 h-4" />
-              <span>Launch Intelligence Dashboard</span>
-              <ArrowRight className="w-4 h-4 ml-1" />
-            </Link>
-
-            {!isLoggedIn && (
+            {isLoggedIn ? (
               <Link
-                href="/login"
-                className="w-full sm:w-auto px-8 py-3.5 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-xl border border-slate-700 transition flex items-center justify-center space-x-2"
+                href="/dashboard"
+                className="w-full sm:w-auto px-8 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl shadow-xl shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95 flex items-center justify-center space-x-2"
               >
-                <Lock className="w-4 h-4 text-emerald-400" />
-                <span>Sign In to Account</span>
+                <BarChart3 className="w-4 h-4" />
+                <span>Launch Intelligence Dashboard</span>
+                <ArrowRight className="w-4 h-4 ml-1" />
               </Link>
+            ) : (
+              <>
+                <Link
+                  href="/register"
+                  className="w-full sm:w-auto px-8 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl shadow-xl shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95 flex items-center justify-center space-x-2"
+                >
+                  <Zap className="w-4 h-4" />
+                  <span>Create Free Account</span>
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </Link>
+                <Link
+                  href="/login"
+                  className="w-full sm:w-auto px-8 py-3.5 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-xl border border-slate-700 transition flex items-center justify-center space-x-2"
+                >
+                  <Lock className="w-4 h-4 text-emerald-400" />
+                  <span>Sign In to Account</span>
+                </Link>
+              </>
             )}
           </div>
 

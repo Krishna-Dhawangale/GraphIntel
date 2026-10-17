@@ -72,19 +72,13 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     !endpoint.includes("/auth/refresh") &&
     !endpoint.includes("/auth/me")
   ) {
-    const isGuestAllowed =
+    const isPublicPage =
       typeof window !== "undefined" &&
       (window.location.pathname === "/" ||
         window.location.pathname.startsWith("/login") ||
         window.location.pathname.startsWith("/register") ||
         window.location.pathname.startsWith("/forgot-password") ||
-        window.location.pathname.startsWith("/reset-password") ||
-        window.location.pathname.startsWith("/dashboard") ||
-        window.location.pathname.startsWith("/chat") ||
-        window.location.pathname.startsWith("/graph") ||
-        window.location.pathname.startsWith("/documents") ||
-        window.location.pathname.startsWith("/conversations") ||
-        window.location.pathname.startsWith("/reports"));
+        window.location.pathname.startsWith("/reset-password"));
 
     const refreshToken = getRefreshToken();
     if (refreshToken && !isRefreshing) {
@@ -104,7 +98,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
           response = await fetch(`${API_BASE}${endpoint}`, { ...options, headers, credentials: "include" });
         } else {
           removeToken();
-          if (typeof window !== "undefined" && !isGuestAllowed) {
+          if (typeof window !== "undefined" && !isPublicPage) {
             window.location.href = `/login?next=${encodeURIComponent(window.location.pathname)}`;
           }
         }
@@ -115,7 +109,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       }
     } else if (!refreshToken) {
       removeToken();
-      if (typeof window !== "undefined" && !isGuestAllowed) {
+      if (typeof window !== "undefined" && !isPublicPage) {
         window.location.href = `/login?next=${encodeURIComponent(window.location.pathname)}`;
       }
     }

@@ -4,14 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3,
-  ExternalLink,
   FileCode,
   FileText,
   History,
-  MessageSquare,
   Settings,
   Share2,
-  Shield,
   Sparkles,
 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
@@ -68,56 +65,10 @@ export default function Sidebar() {
               })}
             </nav>
           </div>
-
-          <div className="pt-4 border-t border-border/60">
-            <p className="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-              Architecture
-            </p>
-            <div className="space-y-2 px-3 text-xs text-slate-400">
-              <div className="flex items-center justify-between py-1 border-b border-border/30">
-                <span>Vector Store</span>
-                <span className="text-emerald-400 font-mono">Qdrant</span>
-              </div>
-              <div className="flex items-center justify-between py-1 border-b border-border/30">
-                <span>Graph Store</span>
-                <span className="text-cyan-400 font-mono">Neo4j</span>
-              </div>
-              <div className="flex items-center justify-between py-1 border-b border-border/30">
-                <span>Cache & Limit</span>
-                <span className="text-rose-400 font-mono">Redis</span>
-              </div>
-              <div className="flex items-center justify-between py-1 border-b border-border/30">
-                <span>Relational DB</span>
-                <span className="text-blue-400 font-mono">PostgreSQL</span>
-              </div>
-              <div className="flex items-center justify-between py-1">
-                <span>Agentic Workflow</span>
-                <span className="text-emerald-400 font-mono">LangGraph</span>
-              </div>
-            </div>
-          </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="pt-4 border-t border-border/60">
           <ThemeToggle showLabel className="w-full justify-center py-2" />
-          <div className="p-3 bg-slate-900/80 rounded-xl border border-border/70 text-xs">
-          <div className="flex items-center space-x-2 text-emerald-400 mb-1">
-            <Shield className="w-4 h-4" />
-            <span className="font-semibold">Security Isolation</span>
-          </div>
-          <p className="text-slate-400 text-[11px] leading-relaxed">
-            Tenant-isolated vector retrieval with strict prompt injection boundaries.
-          </p>
-          <a
-            href="https://graphintel-api-mrbj.onrender.com/api/v1/docs"
-            target="_blank"
-            rel="noreferrer"
-            className="mt-2.5 inline-flex items-center space-x-1 text-cyan-400 hover:underline"
-          >
-            <span>FastAPI Swagger Docs</span>
-            <ExternalLink className="w-3 h-3" />
-          </a>
-        </div>
         </div>
       </aside>
 
