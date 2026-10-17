@@ -14,6 +14,7 @@ from app.schemas.graph import (
     RelationshipResponse,
 )
 from app.security.deps import require_analyst, require_user
+from app.security.guest import Identity, get_current_identity
 from app.services.audit_service import log_audit_event
 from app.services.graph_service import GraphService
 
@@ -120,13 +121,14 @@ async def search_graph_entities(
     q: str = Query("", description="Entity search query (name or alias)"),
     entity_type: Optional[str] = Query(None, description="Entity type filter"),
     limit: int = Query(50, ge=1, le=200),
-    current_user: User = Depends(require_user),
+    identity: Identity = Depends(get_current_identity),
     service: GraphService = Depends(get_graph_service),
 ):
-    """Search for entities matching query text and type within user's graph."""
+    """Search for entities matching query text and type within user or guest graph."""
     types_list = [entity_type] if entity_type else None
+    target_user_id = identity.user_id or identity.guest_session_id
     return await service.store.search_entities(
-        user_id=current_user.id,
+        user_id=target_user_id,
         query=q,
         entity_types=types_list,
         limit=limit,
@@ -141,11 +143,12 @@ async def search_graph_entities(
 )
 async def get_graph_visualization(
     limit: int = Query(150, ge=1, le=500),
-    current_user: User = Depends(require_user),
+    identity: Identity = Depends(get_current_identity),
     service: GraphService = Depends(get_graph_service),
 ):
-    """Retrieve full graph visualization for user."""
-    return await service.store.get_full_graph(user_id=current_user.id, limit=limit)
+    """Retrieve full graph visualization for current user or guest."""
+    target_user_id = identity.user_id or identity.guest_session_id
+    return await service.store.get_full_graph(user_id=target_user_id, limit=limit)
 
 
 @router.get(

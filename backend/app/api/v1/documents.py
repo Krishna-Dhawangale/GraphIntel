@@ -23,6 +23,7 @@ from app.schemas.document import (
     DocumentStatusResponse,
 )
 from app.security.deps import get_current_user, require_user
+from app.security.guest import Identity, get_current_identity
 from app.services.audit_service import log_audit_event
 from app.services.ingestion_service import IngestionService
 from app.workers.async_worker import background_worker
@@ -104,14 +105,17 @@ async def upload_document(
 async def list_documents(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
-    current_user: User = Depends(require_user),
+    identity: Identity = Depends(get_current_identity),
     db: AsyncSession = Depends(get_db),
 ):
-    """List non-deleted documents scoped strictly to the authenticated user's tenant."""
+    """List non-deleted documents scoped strictly to the authenticated user's tenant, or empty for guests."""
+    if identity.is_guest or not identity.user_id:
+        return DocumentListResponse(items=[], total=0)
+
     stmt = (
         select(Document)
         .where(
-            Document.tenant_id == current_user.tenant_id,
+            Document.tenant_id == identity.tenant_id,
             Document.is_deleted == False,
         )
         .order_by(Document.created_at.desc())
@@ -122,7 +126,7 @@ async def list_documents(
     documents = result.scalars().all()
 
     count_stmt = select(func.count(Document.id)).where(
-        Document.tenant_id == current_user.tenant_id,
+        Document.tenant_id == identity.tenant_id,
         Document.is_deleted == False,
     )
     count_res = await db.execute(count_stmt)

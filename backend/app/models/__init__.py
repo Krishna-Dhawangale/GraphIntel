@@ -5,6 +5,7 @@ from app.models.document import Document, DocumentStatus, DocumentVersion
 from app.models.ingestion import IngestionJob, JobStatus
 from app.models.password_reset import PasswordResetToken
 from app.models.query import Query, Source
+from app.models.research_history import ResearchHistory
 from app.models.user import User, UserRole
 
 __all__ = [
@@ -20,7 +21,9 @@ __all__ = [
     "JobStatus",
     "Query",
     "Source",
+    "ResearchHistory",
     "AuditLog",
     "AuditAction",
     "PasswordResetToken",
 ]
+

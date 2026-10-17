@@ -18,14 +18,15 @@ class AgentRAGService:
     async def execute(
         self,
         question: str,
-        user_id: str,
+        user_id: Optional[str] = None,
         conversation_id: Optional[str] = None,
+        guest_session_id: Optional[str] = None,
     ) -> QueryResponse:
         start_total = time.perf_counter()
         clean_q = question.strip()
 
         initial_state: AgentState = {
-            "user_id": user_id,
+            "user_id": user_id or f"guest_{guest_session_id}",
             "question": clean_q,
             "conversation_id": conversation_id,
             "iteration_count": 0,
@@ -37,7 +38,7 @@ class AgentRAGService:
         log_event(
             "agent_workflow_started",
             f"Starting LangGraph Agentic RAG for: '{clean_q}'",
-            user_id=user_id,
+            user_id=user_id or guest_session_id,
         )
 
         try:
@@ -79,28 +80,60 @@ class AgentRAGService:
             r["canonical"] for r in final_state.get("resolved_entities", []) if "canonical" in r
         ]
 
-        # Persist to database
-        query_record = Query(
-            user_id=user_id,
-            question=clean_q,
-            answer=final_state.get("answer", ""),
+        metadata = QueryMetadata(
             retrieval_time_ms=retrieval_ms,
             llm_time_ms=llm_ms,
+            total_time_ms=total_time_ms,
+            chunks_retrieved=len(retrieved_chunks),
+            model_used="langgraph-multi-agent",
+            citation_validation_time_ms=cit_val_ms,
+            paths_found=len(graph_paths),
+            graph_nodes_retrieved=len(resolved_entities),
+            degraded=len(final_state.get("errors", [])) > 0,
         )
-        self.db.add(query_record)
-        await self.db.flush()
 
-        for cit in citations:
-            source_record = Source(
-                query_id=query_record.id,
-                document_id=cit.document_id,
-                chunk_id=cit.chunk_id or "",
-                relevance_score=cit.relevance_score,
-                citation_order=cit.citation_order,
-            )
-            self.db.add(source_record)
+        # Persist to ResearchHistory
+        from app.services.research_history_service import ResearchHistoryService
+        history_svc = ResearchHistoryService(self.db)
+        history_rec = await history_svc.create_history_record(
+            question=clean_q,
+            answer=final_state.get("answer", ""),
+            retrieval_mode="agentic",
+            citations=citations,
+            graph_paths=graph_paths,
+            metadata=metadata,
+            user_id=user_id,
+            guest_session_id=guest_session_id,
+            status="SUCCESS",
+        )
 
-        await self.db.commit()
+        # Legacy persistence if authenticated
+        query_id = history_rec.id
+        if user_id:
+            try:
+                query_record = Query(
+                    user_id=user_id,
+                    question=clean_q,
+                    answer=final_state.get("answer", ""),
+                    retrieval_time_ms=retrieval_ms,
+                    llm_time_ms=llm_ms,
+                )
+                self.db.add(query_record)
+                await self.db.flush()
+
+                for cit in citations:
+                    source_record = Source(
+                        query_id=query_record.id,
+                        document_id=cit.document_id,
+                        chunk_id=cit.chunk_id or "",
+                        relevance_score=cit.relevance_score,
+                        citation_order=cit.citation_order,
+                    )
+                    self.db.add(source_record)
+                await self.db.commit()
+                query_id = query_record.id
+            except Exception as e:
+                logger.warning(f"Legacy query record skipped: {e}")
 
         from app.core.cost_tracker import cost_tracker
         from app.core.metrics import record_token_usage

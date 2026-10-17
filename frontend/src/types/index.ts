@@ -191,3 +191,38 @@ export interface AuditLogItem {
   metadata: Record<string, any>;
   created_at: string;
 }
+
+export interface ResearchHistoryItem {
+  id: string;
+  question: string;
+  answer: string;
+  answer_preview: string;
+  retrieval_mode: string;
+  citations_count: number;
+  graph_paths_count: number;
+  status: string;
+  created_at: string;
+}
+
+export interface ResearchHistoryDetail {
+  id: string;
+  user_id?: string | null;
+  guest_session_id?: string | null;
+  question: string;
+  answer: string;
+  retrieval_mode: string;
+  citations: SourceCitation[];
+  graph_paths: GraphPathInfo[];
+  metadata?: QueryMetadata | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ResearchHistoryListResponse {
+  items: ResearchHistoryItem[];
+  total: number;
+  skip: number;
+  limit: number;
+}
+

@@ -97,6 +97,17 @@ async def register_user(
         metadata={"email": user.email, "role": user.role},
     )
 
+    # Automatically migrate guest history if caller was exploring as a guest
+    from app.security.guest import get_guest_session_from_request
+    from app.services.research_history_service import ResearchHistoryService
+    guest_session_id = get_guest_session_from_request(request)
+    if guest_session_id:
+        try:
+            hist_svc = ResearchHistoryService(db)
+            await hist_svc.migrate_guest_history(guest_session_id=guest_session_id, target_user_id=user.id)
+        except Exception:
+            pass
+
     return user
 
 
@@ -211,6 +222,17 @@ async def login_json(
         ip_address=client_ip,
         user_agent=user_agent,
     )
+
+    # Migrate guest history if caller was exploring as a guest
+    from app.security.guest import get_guest_session_from_request
+    from app.services.research_history_service import ResearchHistoryService
+    guest_session_id = get_guest_session_from_request(request)
+    if guest_session_id:
+        try:
+            hist_svc = ResearchHistoryService(db)
+            await hist_svc.migrate_guest_history(guest_session_id=guest_session_id, target_user_id=user.id)
+        except Exception:
+            pass
 
     return Token(
         access_token=access_token,

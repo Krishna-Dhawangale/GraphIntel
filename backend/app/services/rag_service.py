@@ -113,12 +113,13 @@ class RAGService:
     async def answer_query(
         self,
         question: str,
-        user_id: str,
+        user_id: Optional[str] = None,
         top_k: int = settings.TOP_K,
         retrieval_mode: str = "hybrid",
         max_graph_hops: int = 3,
         document_ids: Optional[List[str]] = None,
         temporal_year: Optional[int] = None,
+        guest_session_id: Optional[str] = None,
     ) -> QueryResponse:
         from app.core.cost_tracker import cost_tracker
         from app.core.metrics import (
@@ -133,9 +134,10 @@ class RAGService:
         t_perf_start = time.perf_counter()
 
         # 0. Check cache if applicable (tenant/user-isolated key)
-        cache_key_raw = f"{user_id}:{sanitized_question}:{retrieval_mode}:{top_k}:{max_graph_hops}:{document_ids}:{temporal_year}"
+        session_identity = user_id or guest_session_id or "guest"
+        cache_key_raw = f"{session_identity}:{sanitized_question}:{retrieval_mode}:{top_k}:{max_graph_hops}:{document_ids}:{temporal_year}"
         cache_hash = hashlib.sha256(cache_key_raw.encode()).hexdigest()[:16]
-        cache_key = f"query:{user_id}:{cache_hash}"
+        cache_key = f"query:{session_identity}:{cache_hash}"
 
         try:
             cached_val = await redis_manager.get_json(cache_key)
@@ -308,40 +310,6 @@ class RAGService:
         citation_val_time_ms = max(0, int((time.perf_counter() - t_val_start) * 1000))
         total_time_ms = int((time.perf_counter() - t_perf_start) * 1000)
 
-        # 6. Persist Query and Sources in PostgreSQL
-        query_record = Query(
-            user_id=user_id,
-            question=sanitized_question,
-            answer=validated_answer,
-            retrieval_time_ms=retrieval_time_ms,
-            llm_time_ms=llm_time_ms,
-        )
-        self.db.add(query_record)
-        await self.db.flush()
-
-        for cit in citations:
-            source_record = Source(
-                query_id=query_record.id,
-                document_id=cit.document_id,
-                chunk_id=cit.chunk_id or "",
-                relevance_score=cit.relevance_score,
-                citation_order=cit.citation_order,
-            )
-            self.db.add(source_record)
-
-        await self.db.commit()
-
-        log_event(
-            "query_completed",
-            f"GraphRAG query completed in {total_time_ms}ms (mode={retrieval_mode})",
-            query_id=query_record.id,
-            user_id=user_id,
-            retrieval_time_ms=retrieval_time_ms,
-            llm_time_ms=llm_time_ms,
-            tokens_used=tot_tokens,
-            cost_usd=cost_usd,
-        )
-
         metadata = QueryMetadata(
             retrieval_time_ms=retrieval_time_ms,
             llm_time_ms=llm_time_ms,
@@ -362,8 +330,62 @@ class RAGService:
             skipped_llm=False,
         )
 
+        # 6. Persist to persistent ResearchHistory (for both user and guest)
+        from app.services.research_history_service import ResearchHistoryService
+        history_svc = ResearchHistoryService(self.db)
+        history_record = await history_svc.create_history_record(
+            question=sanitized_question,
+            answer=validated_answer,
+            retrieval_mode=retrieval_mode,
+            citations=citations,
+            graph_paths=graph_paths,
+            metadata=metadata,
+            user_id=user_id,
+            guest_session_id=guest_session_id,
+            status="SUCCESS",
+        )
+
+        # If user is authenticated, also persist to Query and Source tables for backward compatibility
+        query_id = history_record.id
+        if user_id:
+            try:
+                query_record = Query(
+                    user_id=user_id,
+                    question=sanitized_question,
+                    answer=validated_answer,
+                    retrieval_time_ms=retrieval_time_ms,
+                    llm_time_ms=llm_time_ms,
+                )
+                self.db.add(query_record)
+                await self.db.flush()
+
+                for cit in citations:
+                    source_record = Source(
+                        query_id=query_record.id,
+                        document_id=cit.document_id,
+                        chunk_id=cit.chunk_id or "",
+                        relevance_score=cit.relevance_score,
+                        citation_order=cit.citation_order,
+                    )
+                    self.db.add(source_record)
+                await self.db.commit()
+                query_id = query_record.id
+            except Exception as e:
+                log_event("query_persist_warn", f"Legacy query table write skipped: {e}")
+
+        log_event(
+            "query_completed",
+            f"GraphRAG query completed in {total_time_ms}ms (mode={retrieval_mode})",
+            query_id=query_id,
+            user_id=user_id or guest_session_id,
+            retrieval_time_ms=retrieval_time_ms,
+            llm_time_ms=llm_time_ms,
+            tokens_used=tot_tokens,
+            cost_usd=cost_usd,
+        )
+
         resp = QueryResponse(
-            id=query_record.id,
+            id=query_id,
             question=sanitized_question,
             answer=validated_answer,
             sources=citations,

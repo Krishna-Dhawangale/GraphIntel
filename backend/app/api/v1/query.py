@@ -15,10 +15,11 @@ from app.models.audit import AuditAction
 from app.models.query import Query as QueryModel
 from app.models.user import User
 from app.schemas.query import QueryHistoryItem, QueryRequest, QueryResponse
-from app.security.deps import get_current_user, require_user
+from app.security.guest import Identity, get_current_identity
 from app.security.prompt_injection import detect_prompt_injection
 from app.services.audit_service import log_audit_event
 from app.services.rag_service import RAGService
+from app.services.research_history_service import ResearchHistoryService
 
 router = APIRouter()
 
@@ -31,7 +32,7 @@ router = APIRouter()
 async def execute_query(
     payload: QueryRequest,
     request: Request,
-    current_user: User = Depends(require_user),
+    identity: Identity = Depends(get_current_identity),
     db: AsyncSession = Depends(get_db),
 ):
     """Execute GraphRAG query with vector search, knowledge graph traversal, hybrid fusion, or LangGraph agent."""
@@ -43,7 +44,7 @@ async def execute_query(
     cache_fingerprint = hashlib.sha256(
         f"{sanitized_question}_{payload.retrieval_mode}_{payload.top_k}_{payload.temporal_year}_{payload.document_ids}".encode()
     ).hexdigest()
-    cache_key = f"query:{current_user.tenant_id}:{cache_fingerprint}"
+    cache_key = f"query:{identity.tenant_id}:{cache_fingerprint}"
 
     cached = await redis_manager.get_json(cache_key)
     if cached:
@@ -58,18 +59,20 @@ async def execute_query(
         agent_svc = AgentRAGService(db)
         response = await agent_svc.execute(
             question=sanitized_question,
-            user_id=current_user.id,
+            user_id=identity.user_id,
+            guest_session_id=identity.guest_session_id,
         )
     else:
         rag_service = RAGService(db)
         response = await rag_service.answer_query(
             question=sanitized_question,
-            user_id=current_user.id,
+            user_id=identity.user_id,
             top_k=payload.top_k or 5,
             retrieval_mode=payload.retrieval_mode or "hybrid",
             max_graph_hops=payload.max_graph_hops or 3,
             document_ids=payload.document_ids,
             temporal_year=payload.temporal_year,
+            guest_session_id=identity.guest_session_id,
         )
 
     # Cache result for 5 minutes (300 seconds)
@@ -82,8 +85,8 @@ async def execute_query(
     await log_audit_event(
         db=db,
         action=AuditAction.QUERY.value,
-        user_id=current_user.id,
-        tenant_id=current_user.tenant_id,
+        user_id=identity.user_id or f"guest:{identity.guest_session_id[:12]}",
+        tenant_id=identity.tenant_id,
         resource_type="query",
         status="SUCCESS",
         ip_address=client_ip,
@@ -91,6 +94,7 @@ async def execute_query(
         metadata={
             "mode": payload.retrieval_mode,
             "prompt_injection_flag": injection_check.is_suspicious,
+            "is_guest": identity.is_guest,
         },
     )
 
@@ -105,7 +109,7 @@ async def execute_query(
 async def execute_agent_query(
     payload: QueryRequest,
     request: Request,
-    current_user: User = Depends(require_user),
+    identity: Identity = Depends(get_current_identity),
     db: AsyncSession = Depends(get_db),
 ):
     """Execute multi-step Agentic RAG workflow with LangGraph state graph."""
@@ -120,14 +124,15 @@ async def execute_agent_query(
     agent_svc = AgentRAGService(db)
     response = await agent_svc.execute(
         question=sanitized_question,
-        user_id=current_user.id,
+        user_id=identity.user_id,
+        guest_session_id=identity.guest_session_id,
     )
 
     await log_audit_event(
         db=db,
         action=AuditAction.QUERY.value,
-        user_id=current_user.id,
-        tenant_id=current_user.tenant_id,
+        user_id=identity.user_id or f"guest:{identity.guest_session_id[:12]}",
+        tenant_id=identity.tenant_id,
         resource_type="query",
         status="SUCCESS",
         ip_address=client_ip,
@@ -135,6 +140,7 @@ async def execute_agent_query(
         metadata={
             "mode": "agentic",
             "prompt_injection_flag": injection_check.is_suspicious,
+            "is_guest": identity.is_guest,
         },
     )
 
@@ -145,33 +151,30 @@ async def execute_agent_query(
 async def get_query_history(
     skip: int = FastQuery(0, ge=0),
     limit: int = FastQuery(20, ge=1, le=100),
-    current_user: User = Depends(require_user),
+    identity: Identity = Depends(get_current_identity),
     db: AsyncSession = Depends(get_db),
 ):
-    """Retrieve history of past RAG queries executed by the current user."""
-    stmt = (
-        select(QueryModel)
-        .options(selectinload(QueryModel.sources))
-        .where(QueryModel.user_id == current_user.id)
-        .order_by(QueryModel.created_at.desc())
-        .offset(skip)
-        .limit(limit)
+    """Retrieve history of past RAG queries executed by the current user or guest session."""
+    history_svc = ResearchHistoryService(db)
+    items, _ = await history_svc.list_history(
+        user_id=identity.user_id,
+        guest_session_id=identity.guest_session_id,
+        skip=skip,
+        limit=limit,
     )
-    result = await db.execute(stmt)
-    queries = result.scalars().all()
 
-    items: List[QueryHistoryItem] = []
-    for q in queries:
-        items.append(
+    result_items: List[QueryHistoryItem] = []
+    for it in items:
+        result_items.append(
             QueryHistoryItem(
-                id=q.id,
-                question=q.question,
-                answer=q.answer,
-                retrieval_time_ms=q.retrieval_time_ms,
-                llm_time_ms=q.llm_time_ms,
-                created_at=q.created_at,
-                sources_count=len(q.sources),
+                id=it.id,
+                question=it.question,
+                answer=it.answer,
+                retrieval_time_ms=0,
+                llm_time_ms=0,
+                created_at=it.created_at,
+                sources_count=it.citations_count,
             )
         )
 
-    return items
+    return result_items

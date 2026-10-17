@@ -6,6 +6,9 @@ import {
   GraphVisualizationResponse,
   QueryHistoryItem,
   QueryResponse,
+  ResearchHistoryDetail,
+  ResearchHistoryItem,
+  ResearchHistoryListResponse,
   ResearchReport,
   User,
 } from "../types";
@@ -51,6 +54,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     response = await fetch(`${API_BASE}${endpoint}`, {
       ...options,
       headers,
+      credentials: "include",
     });
   } catch (err: any) {
     if (err?.name === "TypeError" || err?.message?.toLowerCase().includes("fetch")) {
@@ -68,6 +72,20 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     !endpoint.includes("/auth/refresh") &&
     !endpoint.includes("/auth/me")
   ) {
+    const isGuestAllowed =
+      typeof window !== "undefined" &&
+      (window.location.pathname === "/" ||
+        window.location.pathname.startsWith("/login") ||
+        window.location.pathname.startsWith("/register") ||
+        window.location.pathname.startsWith("/forgot-password") ||
+        window.location.pathname.startsWith("/reset-password") ||
+        window.location.pathname.startsWith("/dashboard") ||
+        window.location.pathname.startsWith("/chat") ||
+        window.location.pathname.startsWith("/graph") ||
+        window.location.pathname.startsWith("/documents") ||
+        window.location.pathname.startsWith("/conversations") ||
+        window.location.pathname.startsWith("/reports"));
+
     const refreshToken = getRefreshToken();
     if (refreshToken && !isRefreshing) {
       isRefreshing = true;
@@ -75,6 +93,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
         const refreshResp = await fetch(`${API_BASE}/auth/refresh`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ refresh_token: refreshToken }),
         });
         if (refreshResp.ok) {
@@ -82,17 +101,10 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
           setTokens(data.access_token, data.refresh_token);
           onRefreshed(data.access_token);
           headers["Authorization"] = `Bearer ${data.access_token}`;
-          response = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+          response = await fetch(`${API_BASE}${endpoint}`, { ...options, headers, credentials: "include" });
         } else {
           removeToken();
-          const isPublic =
-            typeof window !== "undefined" &&
-            (window.location.pathname === "/" ||
-              window.location.pathname.startsWith("/login") ||
-              window.location.pathname.startsWith("/register") ||
-              window.location.pathname.startsWith("/forgot-password") ||
-              window.location.pathname.startsWith("/reset-password"));
-          if (typeof window !== "undefined" && !isPublic) {
+          if (typeof window !== "undefined" && !isGuestAllowed) {
             window.location.href = `/login?next=${encodeURIComponent(window.location.pathname)}`;
           }
         }
@@ -103,14 +115,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       }
     } else if (!refreshToken) {
       removeToken();
-      const isPublic =
-        typeof window !== "undefined" &&
-        (window.location.pathname === "/" ||
-          window.location.pathname.startsWith("/login") ||
-          window.location.pathname.startsWith("/register") ||
-          window.location.pathname.startsWith("/forgot-password") ||
-          window.location.pathname.startsWith("/reset-password"));
-      if (typeof window !== "undefined" && !isPublic) {
+      if (typeof window !== "undefined" && !isGuestAllowed) {
         window.location.href = `/login?next=${encodeURIComponent(window.location.pathname)}`;
       }
     }
@@ -241,6 +246,41 @@ export const api = {
       }),
     history: (skip = 0, limit = 20) =>
       request<QueryHistoryItem[]>(`/query/history?skip=${skip}&limit=${limit}`),
+  },
+  research: {
+    history: (params: {
+      q?: string;
+      retrieval_mode?: string;
+      start_date?: string;
+      end_date?: string;
+      skip?: number;
+      limit?: number;
+    } = {}) => {
+      const queryParams = new URLSearchParams();
+      if (params.q) queryParams.set("q", params.q);
+      if (params.retrieval_mode && params.retrieval_mode !== "all") {
+        queryParams.set("retrieval_mode", params.retrieval_mode);
+      }
+      if (params.start_date) queryParams.set("start_date", params.start_date);
+      if (params.end_date) queryParams.set("end_date", params.end_date);
+      queryParams.set("skip", String(params.skip ?? 0));
+      queryParams.set("limit", String(params.limit ?? 20));
+      return request<ResearchHistoryListResponse>(`/research/history?${queryParams.toString()}`);
+    },
+    detail: (id: string) => request<ResearchHistoryDetail>(`/research/history/${id}`),
+    delete: (id: string) =>
+      request<{ message: string; id: string }>(`/research/history/${id}`, {
+        method: "DELETE",
+      }),
+    clear: () =>
+      request<{ message: string; cleared_count: number }>("/research/history", {
+        method: "DELETE",
+      }),
+    migrate: (guestSessionId?: string) =>
+      request<{ migrated_count: number; message: string }>("/research/history/migrate", {
+        method: "POST",
+        body: JSON.stringify({ guest_session_id: guestSessionId }),
+      }),
   },
   admin: {
     auditLogs: (limit = 50, offset = 0, action?: string) =>
